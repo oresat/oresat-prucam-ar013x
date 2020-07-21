@@ -7,19 +7,19 @@ dto=prudev-00A0
 all: module
 
 module:
-	make -C /lib/modules/$(shell uname -r)/build/ M=$(PWD) modules $(ccflag-y) 
+	make -C /lib/modules/$(shell uname -r)/build/ M=$(PWD) modules $(ccflag-y)
 
 ins:
 	insmod $(mod_name)
 rm:
 	rmmod $(mod_name)
-	
+
 clean:
-	@make -C /lib/modules/$(shell uname -r)/build/ M=$(PWD) clean > /dev/null 
+	@make -C /lib/modules/$(shell uname -r)/build/ M=$(PWD) clean > /dev/null
 	rm -f prudev-00A0.dtbo
 
 deploy:
-	cp prucam.ko /lib/modules/4.14.71-ti-r80/kernel/drivers/remoteproc
+	cp prucam.ko /lib/modules/$(shell uname -r)/kernel/drivers/remoteproc
 	depmod
 
 # Compile and install device tree
