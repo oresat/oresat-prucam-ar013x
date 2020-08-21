@@ -1,5 +1,5 @@
 obj-m += prucam.o
-prucam-objs += src/prucam.o src/cam_gpio.o
+prucam-objs += src/prucam.o src/cam_gpio.o src/cam_i2c.o
 mod_name=prucam.ko
 ccflags-y := -std=gnu99 -Wno-declaration-after-statement #this disables the C90 warnings
 dto=prudev-00A0

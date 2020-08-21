@@ -50,3 +50,10 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# others
+test_camera
+
+# pru firmware
+pru_fw.asm
+gen/

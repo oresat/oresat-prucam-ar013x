@@ -1,8 +1,12 @@
-#include <linux/module.h> // needed for LKM macros and such
-#include <linux/kernel.h>         // Contains types, macros, functions for the kernel
+#ifndef CAM_GPIO_H
+#define CAM_GPIO_H
+
+
+#include <linux/module.h>
+#include <linux/kernel.h>
 #include <linux/gpio.h>   
 #include <linux/delay.h>
-#include "configs.h"
+
 
 // Camera Control Pin Numbers
 #define GPIO_FLASH      16
@@ -16,14 +20,35 @@
 #define GPIO_TRIGGER    98
 #define GPIO_VREG_EN    100
 
-int init_cam_gpio(void);
-void camera_enable(void); 
-int free_cam_gpio(void);
 
 typedef struct {
-  uint8_t num;
-  bool init;
-  bool enable; 
-  char* label;
+    uint8_t num;
+    bool init;
+    bool enable; 
+    char* label;
 } gpio;
 
+
+/**
+ * @brief Initalize all the camera gpio pins..
+ * @return 0 on success or negative errno on error.
+ */
+int init_cam_gpio(void);
+
+
+/**
+ * @brief Enables the gpio pins for camera.
+ * @return 0 on success or negative errno on error.
+ */
+void camera_enable(void); 
+
+
+/**
+ * @brief Puts the camera gpio pins in a good, disabled state and frees the
+ * lines.
+ * @return 0 on success or negative errno on error.
+ */
+int free_cam_gpio(void);
+
+
+#endif
