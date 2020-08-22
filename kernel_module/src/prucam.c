@@ -50,7 +50,7 @@ uint16_t digital_binding = 0;
 
 
 static ssize_t prucam_context_show(struct device *dev, struct device_attribute *attr, char *buf) {
-    uint16_t value, reg;
+    uint16_t value = 0, reg;
     int len = 0;
 
     reg = get_reg(attr->attr.name);
@@ -65,6 +65,14 @@ static ssize_t prucam_context_show(struct device *dev, struct device_attribute *
         value >>= 13;
         value &= 0x1;
     }
+    else if (strcmp(attr->attr.name, "x_size") == 0) {
+        // reg is for x_attr_end
+        value += 1; // x_attr_start is 0
+    }
+    else if (strcmp(attr->attr.name, "y_size") == 0) {
+        // reg is for y_attr_end
+        value -= 1; // y_attr_start is 2
+    }
     else if (strcmp(attr->attr.name, "analog_gain") == 0) {
         /** 2 bits in reg 0x30B0, Context A is [5:4] & Context B is [9:8] */
         value = digital_test; //TODO remove 
@@ -78,10 +86,6 @@ static ssize_t prucam_context_show(struct device *dev, struct device_attribute *
         if(context == CONTEXT_B)
             value >>= 4;
         value &= 0x3;
-    }
-    else {
-        printk(KERN_ERR "Unkown store attr: %s", attr->attr.name);
-        return len;
     }
 
     len = sprintf(buf, "%d\n", (int)value);
@@ -148,8 +152,7 @@ static ssize_t prucam_context_store(struct device *dev, struct device_attribute 
         digital_binding = value; // set global
     }
 
-    if(write_cam_reg(reg, value) != 0) 
-        printk(KERN_ERR "i2c write on reg %d with value %d failed", reg, value);
+    write_cam_reg(reg, value);
 
     return count;
 }

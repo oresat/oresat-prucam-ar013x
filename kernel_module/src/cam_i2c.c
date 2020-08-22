@@ -60,7 +60,7 @@ int init_camera_regs(camera_regs_t *regs){
 
 
 /**
- * write_cam_reg write the value to the specified register. The AR013X has 16
+ * Writes the value to the specified register. The AR013X has 16
  * bit register addresses and values, which differs from "normal" i2c
  */
 int write_cam_reg(uint16_t reg, uint16_t val) {
@@ -74,36 +74,50 @@ int write_cam_reg(uint16_t reg, uint16_t val) {
         val,
     };
 
-    // TODO should I check that num bytes matches?
     ret = i2c_master_send(client, buf, 4);
     if(ret < 0)
-        return ret;
+      	printk(KERN_INFO "I2C write for reg %x failed with %d", reg, ret);
+    else if(ret == 0)
+      	printk(KERN_INFO "No data was written for reg %x", reg);
 
-    return 0;
+    return ret;
 }
 
 
 /**
- * write_cam_reg write the value to the specified register. The AR013X has 16
+ * Reads the value from the specified register. The AR013X has 16
  * bit register addresses and values, which differs from "normal" i2c
  */
 int read_cam_reg(uint16_t reg, uint16_t *val) {
     int ret;
-    char buf[4] = {
-        reg >> 8,
-        reg,
-        0,
-        0,
-    };
+    char *buf1 = (char*)(&reg);
+    char *buf2 = (char*)(val);
 
     if(val == NULL)
         return -1;
 
-    ret = i2c_master_recv(client, buf, 4);
+    /**
+     * Need to use a i2c_transfer() and not i2c_master_recv() due the camera
+     * requiring 1st writing the 16bit reg followed by a receiving 16bit for the
+     * value without a stop or a new addreess msg between the write and read.
+     */
+    struct i2c_msg msg[] = {
+	/**
+         * Write the 16bit reg. I2C_M_REV_DIR_ADDR is for the need to trick
+         * the i2c driver to think its receiving while it does a write. 
+         * */
+    	{.addr=0x10, .flags=I2C_M_REV_DIR_ADDR, .len=2, .buf=buf1},
+	/** Receive the 16bit value. The I2C_M_RD is to receive */
+    	{.addr=0x10, .flags=I2C_M_RD, .len=2, .buf=buf2},
+    };
+
+    ret = i2c_transfer(i2c_adap, msg, 2);
     if(ret < 0)
-        return ret;
+      	printk(KERN_INFO "I2C read for reg %x failed with %d", reg, ret);
+    else if(ret == 0)
+      	printk(KERN_INFO "No data was read for reg %x", reg);
+    else // TODO remove
+      	printk(KERN_INFO "I2C read for reg %x is %x", reg, (uint16_t)(*buf2)); // TODO remove
 
-    memcpy(val, buf, sizeof(uint16_t));
-
-    return 0;
+    return ret;
 }
