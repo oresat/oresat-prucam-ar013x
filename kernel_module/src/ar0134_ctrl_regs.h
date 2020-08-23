@@ -47,7 +47,7 @@ camera_regs_t startupRegs[] = {
   {.reg = 0x3006, .val = 0x03BF},  		// Y_ADDR_END = 959
   {.reg = 0x3008, .val = 0x04FF},  		// X_ADDR_END = 1279
   {.reg = 0x300A, .val = 0x03DE},  		// FRAME_LENGTH_LINES = 990
-  {.reg = 0x3012, .val = 0x0080},  		// COARSE_INTEGRATION_TIME
+  {.reg = 0x3012, .val = 0x0180},  		// COARSE_INTEGRATION_TIME
   {.reg = 0x3014, .val = 0x00C0},  		// FINE_INTEGRATION_TIME = 192
   {.reg = 0x30A6, .val = 0x0001},  		// Y_ODD_INC = 1
   {.reg = 0x308C, .val = 0x0000},  		// Y_ADDR_START_CB = 0
@@ -58,7 +58,7 @@ camera_regs_t startupRegs[] = {
   {.reg = 0x3016, .val = 0x0064},  		// COARSE_INTEGRATION_TIME_CB = 100
   {.reg = 0x3018, .val = 0x00C0},  		// FINE_INTEGRATION_TIME_CB = 192
   {.reg = 0x30A8, .val = 0x0001},  		// Y_ODD_INC_CB = 1
-  {.reg = 0x3040, .val = 0x4000},  		// READ_MODE = 0
+  {.reg = 0x3040, .val = 0x0000},  		// READ_MODE = 0
   {.reg = 0x3064, .val = 0x1982},  		// EMBEDDED_DATA_CTRL = 6530
   {.reg = 0x31C6, .val = 0x8000},  		// HISPI_CONTROL_STATUS = 32768 (DEFAULT)
 };
