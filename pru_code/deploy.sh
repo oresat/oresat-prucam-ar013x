@@ -86,6 +86,31 @@ echo "-Configuring pinmux"
 		exit 1
 	fi
 
+	#Setup Inputs
+	config-pin $PRU0_0 pruin
+	config-pin -q $PRU0_0
+	config-pin $PRU0_1 pruin
+	config-pin -q $PRU0_1
+	config-pin $PRU0_2 pruin
+	config-pin -q $PRU0_2
+	config-pin $PRU0_3 pruin
+	config-pin -q $PRU0_3
+	config-pin $PRU0_4 pruin
+	config-pin -q $PRU0_4
+	config-pin $PRU0_5 pruin
+	config-pin -q $PRU0_5
+	config-pin $PRU0_6 pruin
+	config-pin -q $PRU0_6
+	config-pin $PRU0_7 pruin
+	config-pin -q $PRU0_7
+	config-pin $PRU0_14 pruin
+	config-pin -q $PRU0_14
+	config-pin $PRU0_15 pruin
+	config-pin -q $PRU0_15
+	config-pin $PRU0_16 pruin
+	config-pin -q $PRU0_16
+	config-pin $PRU0_15O pruout
+	config-pin -q $PRU0_15O
 
 echo "-Rebooting"
 	if [ $PRU_CORE -eq 0 ]

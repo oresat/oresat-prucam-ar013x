@@ -11,7 +11,7 @@
 #include <linux/moduleparam.h>
 #include <linux/kobject.h>
 #include <linux/sysfs.h>
-#include "ar0130_ctrl_regs.h"
+#include "ar0134_ctrl_regs.h"
 #include "cam_gpio.h"
 #include "cam_i2c.h"
 
@@ -378,7 +378,7 @@ static int __init prucam_init(void) {
     regDrvr = platform_driver_register(&prudrvr);
     printk(KERN_INFO "prucam: platform driver register returned: %d\n", regDrvr);
 
-    r = init_cam_i2c(ar013x_i2c_info);
+    r = init_cam_i2c(ar0134_i2c_info);
     if(r < 0)
         printk("i2c init failed\n");
 
