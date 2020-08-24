@@ -46,7 +46,7 @@ static struct class* prucamClass = NULL;
 static struct device* prucamDevice = NULL;
 static int context = CONTEXT_A;
 uint16_t digital_test = 0x1300;
-uint16_t digital_binding = 0;
+uint16_t digital_binning = 0;
 
 
 static ssize_t prucam_context_show(struct device *dev, struct device_attribute *attr, char *buf) {
@@ -80,9 +80,9 @@ static ssize_t prucam_context_show(struct device *dev, struct device_attribute *
         value &= 0x3;
         digital_test = value; // set global
     }
-    else if (strcmp(attr->attr.name, "digital_binding") == 0) {
+    else if (strcmp(attr->attr.name, "digital_binning") == 0) {
         /** 2 bits in reg 0x3032, Context A is [1:0] & Context B is [5:4] */
-        value = digital_binding;
+        value = digital_binning;
         if(context == CONTEXT_B)
             value >>= 4;
         value &= 0x3;
@@ -111,7 +111,7 @@ static ssize_t prucam_context_store(struct device *dev, struct device_attribute 
         value <<= 13;
         value &= 0x0200;
         digital_test &= 0xFDFF;
-        value |= digital_binding;
+        value |= digital_binning;
         digital_test = value; // set global
     }
     else if (strcmp(attr->attr.name, "x_size") == 0) {
@@ -137,19 +137,19 @@ static ssize_t prucam_context_store(struct device *dev, struct device_attribute 
         value |= digital_test;
         digital_test = value; // set global
     }
-    else if (strcmp(attr->attr.name, "digital_binding") == 0) {
+    else if (strcmp(attr->attr.name, "digital_binning") == 0) {
         /** 2 bits in reg 0x3032, Context A is [1:0] & Context B is [5:4] */
         if(context == CONTEXT_A) {
             value &= 0x0003;
-            digital_binding &= 0xFFFC;
+            digital_binning &= 0xFFFC;
         }
         else {
             value <<= 4;
             value &= 0x0030;
-            digital_binding &= 0xFFCF;
+            digital_binning &= 0xFFCF;
         }
-        value |= digital_binding;
-        digital_binding = value; // set global
+        value |= digital_binning;
+        digital_binning = value; // set global
     }
 
     write_cam_reg(reg, value);
@@ -171,7 +171,7 @@ static DEVICE_ATTR(green2_gain, S_IRUGO | S_IWUSR, prucam_context_show, prucam_c
 static DEVICE_ATTR(global_gain, S_IRUGO | S_IWUSR, prucam_context_show, prucam_context_store);
 static DEVICE_ATTR(analog_gain, S_IRUGO | S_IWUSR, prucam_context_show, prucam_context_store);
 static DEVICE_ATTR(frame_len_lines, S_IRUGO | S_IWUSR, prucam_context_show, prucam_context_store);
-static DEVICE_ATTR(digital_binding, S_IRUGO | S_IWUSR, prucam_context_show, prucam_context_store);
+static DEVICE_ATTR(digital_binning, S_IRUGO | S_IWUSR, prucam_context_show, prucam_context_store);
 
 
 static int      dev_open(struct inode *, struct file *);
@@ -353,7 +353,7 @@ static int __init prucam_init(void) {
     r = device_create_file(prucamDevice, &dev_attr_global_gain);
     r = device_create_file(prucamDevice, &dev_attr_analog_gain);
     r = device_create_file(prucamDevice, &dev_attr_frame_len_lines);
-    r = device_create_file(prucamDevice, &dev_attr_digital_binding);
+    r = device_create_file(prucamDevice, &dev_attr_digital_binning);
     if (r < 0)
         printk(KERN_INFO "failed to create write /sys endpoint - continuing without\n");
 
@@ -418,7 +418,7 @@ static void __exit prucam_exit(void) {
     device_remove_file(prucamDevice, &dev_attr_global_gain);
     device_remove_file(prucamDevice, &dev_attr_analog_gain);
     device_remove_file(prucamDevice, &dev_attr_frame_len_lines);
-    device_remove_file(prucamDevice, &dev_attr_digital_binding);
+    device_remove_file(prucamDevice, &dev_attr_digital_binning);
 
     //unregister platform driver
     platform_driver_unregister(&prudrvr);
@@ -582,7 +582,7 @@ static uint16_t get_reg(const char *name) {
         reg = 0x30B0;
     else if (strcmp(name, "frame_len_lines") == 0)
         reg = context == CONTEXT_A ? 0x300A : 0x30AA;
-    else if (strcmp(name, "digital_binding") == 0)
+    else if (strcmp(name, "digital_binning") == 0)
         reg = 0x3032;
     else
         printk(KERN_ERR "Unkown store attr name: %s", name);
