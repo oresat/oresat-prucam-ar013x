@@ -84,40 +84,50 @@ int write_cam_reg(uint16_t reg, uint16_t val) {
 }
 
 
-/**
- * Reads the value from the specified register. The AR013X has 16
- * bit register addresses and values, which differs from "normal" i2c
- */
+// read_cam_reg reads a 16bit value from a 16bit camera register, 
+// returns non-zero on error
 int read_cam_reg(uint16_t reg, uint16_t *val) {
     int ret;
-    char *buf1 = (char*)(&reg);
-    char *buf2 = (char*)(val);
 
+    // safety first
     if(val == NULL)
         return -1;
 
-    /**
-     * Need to use a i2c_transfer() and not i2c_master_recv() due the camera
-     * requiring 1st writing the 16bit reg followed by a receiving 16bit for the
-     * value without a stop or a new addreess msg between the write and read.
-     */
+    // I2C send the little byte first, which is sorta big-endian compared
+    // to the little endian uint16 arguments. Convert these values to BE
+    __be16 reg_be = cpu_to_be16(reg);
+    __be16 val_be = 0;
+
+    // construct the i2c message that:
+    // - writes a 16 bit register (to be read)
+    // - reads back the 16 bit contents of that register
+    //
+    // This is to be used with i2c_transfer() and not i2c_master_recv() 
+    // because i2c_master_recv does not support reading 16 bit registers
     struct i2c_msg msg[] = {
-	/**
-         * Write the 16bit reg. I2C_M_REV_DIR_ADDR is for the need to trick
-         * the i2c driver to think its receiving while it does a write. 
-         * */
-    	{.addr=0x10, .flags=I2C_M_REV_DIR_ADDR, .len=2, .buf=buf1},
-	/** Receive the 16bit value. The I2C_M_RD is to receive */
-    	{.addr=0x10, .flags=I2C_M_RD, .len=2, .buf=buf2},
+        // Write the 16bit reg. I2C_M_REV_DIR_ADDR is for the need to trick
+        // the i2c driver to think its receiving while it does a write. 
+    	{.addr=0x10, .flags=I2C_M_REV_DIR_ADDR, .len=2, .buf=(char*)&reg_be},
+
+	    // Receive the 16bit value. The I2C_M_RD is for receiving
+    	{.addr=0x10, .flags=I2C_M_RD, .len=2, .buf=(char*)&val_be},
     };
 
+    // start the i2c tranfers and check the return val
     ret = i2c_transfer(i2c_adap, msg, 2);
-    if(ret < 0)
-      	printk(KERN_INFO "I2C read for reg %x failed with %d", reg, ret);
-    else if(ret == 0)
-      	printk(KERN_INFO "No data was read for reg %x", reg);
-    else // TODO remove
-      	printk(KERN_INFO "I2C read for reg %x is %x", reg, (uint16_t)(*buf2)); // TODO remove
+    if(ret < 0) {
+        printk(KERN_ERR "I2C read at reg %x failed with error code %d", reg, ret);
+        return ret;
 
-    return ret;
+    // make sure 2 bytes we read
+    } else if (ret != 2) {
+        printk(KERN_ERR "I2C read at reg %x read incorrect number of bytes %d", reg, ret);
+        return ret;
+    }
+
+    // convert the BE value we read to LE and save to argument pointer
+    *val = be16_to_cpu(val_be);
+
+    printk(KERN_INFO "I2C read for reg 0x%x is 0x%x", reg, *val); // TODO make debug
+    return 0;
 }
