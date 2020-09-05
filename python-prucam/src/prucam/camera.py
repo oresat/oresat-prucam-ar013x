@@ -70,18 +70,9 @@ class Camera:
 
     """
 
-    def __init__(self, pru=0):
-        """
-        Parameters
-        ----------
-        pru: int
-            Which pru to use. Should be 0 or 1. Default is 0.
-        """
-
-        self._pru = pru
-
+    def __init__(self):
         self._sysfs_path = "/sys/kernel/prucam/"
-        self._capture_path="/dev/prucam"
+        self._capture_path = "/dev/prucam"
 
         # camera settings sysfs filepaths
         self._sysfs_attr_files = [
@@ -127,8 +118,10 @@ class Camera:
             with open(self._sysfs_path + setting, 'r') as f:
                 value = int(f.read())
         except Exception as e:
-            print(e)  # TODO log this
-            msg = "Error when trying to read from {}.".format(setting)
+            msg = "Error {} when trying to read from  {}.".format(
+                e,
+                setting
+                )
             raise Exception(msg)
 
         return value
@@ -162,24 +155,28 @@ class Camera:
                 )
             raise Exception(msg)
 
-    def capture(self, path: str):
+    def capture(self):
         """Grab an image from the directory.
 
         Returns
         -------
-        OpenCV image array
+        image array
             A random image from the currently-chosen directory.
 
         """
 
+        with open(self._capture_path, "rb") as f:
+            img_raw = f.read()
+
+        return img_raw
+
+    def capture_and_save(self, path: str):
         if path[0] != '/' or path[-1] != '/':
             raise Exception("invalid path")
-
         now_str = datetime.now().isoformat()
         new_img_path = path + "capture-" + now_str + ".bmp"
 
-        with open(self._capture_path, "rb") as f:
-            img_raw = f.read()
+        img_raw = self.capture()
 
         img = Image.frombytes("L", self.image_size, bytes(img_raw))
 

@@ -4,22 +4,10 @@
 class PRU:
     """
     A interface for controlling the pru.
-
-    Attributes
-    ----------
-    pru: int
-        Which PRU. Can be 0 or 1.
     """
 
-    def __init__(self, pru=0):
-        self._pru = pru
-
-        if pru == 0:
-            self._path = "/sys/class/remoteproc/remoteproc1/"
-        elif pru == 1:
-            self._path = "/sys/class/remoteproc/remoteproc2/"
-        else:
-            raise Exception("pru must be 0 or 1")
+    def __init__(self):
+        self._path = "/sys/class/remoteproc/remoteproc1/"
 
     def start(self):
         """
