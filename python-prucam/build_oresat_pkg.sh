@@ -1,5 +1,4 @@
 #! /bin/bash
-
 export PRU_CGT=/usr/share/ti/cgt-pru
 
 # compile pru firmware
@@ -8,8 +7,10 @@ make clean all
 cd -
 
 # add pru firmware to src
-mkdir src/prucam/fw
-cp ../pru_code/am335x-pru0-fw src/prucam/fw/
+if [[ ! -d prucam/fw ]]; then
+    mkdir prucam/fw
+fi
+cp ../pru_code/gen/pru_code.out prucam/fw/
 
 # make OreSat debian package
 python3 setup.py --command-packages=stdeb.command bdist_deb
