@@ -1,7 +1,7 @@
 """
 Unit test for camera.py
 """
-
+import pytest
 from prucam import Camera, CONTEXT_A, CONTEXT_B
 
 

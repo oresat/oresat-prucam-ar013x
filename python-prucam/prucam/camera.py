@@ -15,14 +15,14 @@ CONTEXT_B = 1
 
 # Filenames for camera control. Defined by prucam kernel module.
 _CAPTURE = "capture"
-_CONTEXT = "context_select"
+_CONTEXT = "context"
 
 
 # Filenames for camera settings. Defined by prucam kernel module.
-_IMAGE_X_SIZE = "image_x_size"
-_IMAGE_Y_SIZE = "image_y_size"
-_COARSE_INT_TIME = "coarse_int_time"
-_FINE_INT_TIME = "fine_int_time"
+_IMAGE_X_SIZE = "x_size"
+_IMAGE_Y_SIZE = "y_size"
+_COARSE_INT_TIME = "coarse_time"
+_FINE_INT_TIME = "fine_time"
 _Y_ODD_INC = "y_odd_inc"
 _GREEN1_GAIN = "green1_gain"
 _BLUE_GAIN = "blue_gain"
@@ -31,7 +31,7 @@ _GREEN2_GAIN = "green2_gain"
 _GLOBAL_GAIN = "global_gain"
 _ANALOG_GAIN = "analog_gain"
 _FRAME_LEN_LINES = "frame_len_lines"
-_DIGITAL_BINNING = "digital_binning"
+_DIGITAL_BINNING = "digital_binding"
 
 
 class Camera:
@@ -71,7 +71,7 @@ class Camera:
     """
 
     def __init__(self):
-        self._sysfs_path = "/sys/kernel/prucam/"
+        self._sysfs_path = "/sys/class/pru/prucam/"
         self._capture_path = "/dev/prucam"
 
         # camera settings sysfs filepaths
