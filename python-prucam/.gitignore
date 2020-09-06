@@ -137,3 +137,10 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
+# setuptools with stdeb
+LICENSE
+deb_dist/
+*prucam-*.tar.gz
+
+# prucam firmware
+*.out
