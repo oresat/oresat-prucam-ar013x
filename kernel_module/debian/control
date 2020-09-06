@@ -1,0 +1,8 @@
+Source: prucam-dkms
+Maintainer: Ryan Medick <rmedick@pdx.edu>
+Build-Depends: debhelper (>= 10), dkms
+
+Package: prucam-dkms
+Architecture: armhf
+Depends: ${misc:Depends}
+Description: DKMS source for prucam
