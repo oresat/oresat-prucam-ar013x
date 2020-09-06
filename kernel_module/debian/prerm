@@ -1,0 +1,5 @@
+# remove module
+rmmod prucam
+
+# remove auto start module on boot config
+rm -f /etc/modules-load.d/prucam.conf

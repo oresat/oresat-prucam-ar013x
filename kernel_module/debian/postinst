@@ -1,0 +1,5 @@
+# start module now
+modprobe prucam
+
+# auto start module on boot
+echo "prucam" > /etc/modules-load.d/prucam.conf
