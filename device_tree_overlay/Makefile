@@ -1,9 +1,9 @@
 dto=prudev-00A0
 
-all: module
+all: overlay
 
 overlay: $(dto).dtbo
 	dtc -O dtb -o $(dto).dtbo -b 0 -@ $(dto).dts
 
 deploy:
-	cp -v $(dto).dtbo /lib/firmware
+	cp $(dto).dtbo /lib/firmware
