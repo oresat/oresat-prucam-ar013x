@@ -60,8 +60,9 @@ gen/
 
 # debhelper
 .debhelper/
+*.debhelper*
+*.substvars
+prucam-dkms_*
 debhelper-build-stamp
 files
-prucam-dkms.*
-kernel_module/debian/prucam-dkms/
-prucam-dkms*
+prucam-dkms/
