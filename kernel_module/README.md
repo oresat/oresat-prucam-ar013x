@@ -1,9 +1,10 @@
 # prucam kernel module
 The platform driver kernel module for interfacing to an ar013x camera using a PRU.
 
-**Note:** it will require the pru firmware to be installed to work, see
+**Note:** This will require the pru firmware to be installed to work, see
 `pru_code/` on how to install.
-**Note:** it will require the device tree overlay installed, see 
+
+**Note:** This will require the device tree overlay installed, see 
 `device_tree_overlay/`
 
 ## Build and install debian package (uses [DKMS])
