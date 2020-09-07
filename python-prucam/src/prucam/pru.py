@@ -1,4 +1,6 @@
-""" A interface for controlling the pru. """
+"""A interface for controlling the pru."""
+
+from pathlib import Path
 
 
 class PRU:
@@ -12,18 +14,35 @@ class PRU:
     def start(self):
         """
         Turn on the pru.
-        """
 
-        with open(self._path + "status", 'w') as f:
-            f.write('start')
+        Raises
+        ------
+        FileNotFoundError
+            If remoteproc1 is not found. Most likely the device tree overaly
+            for REMOTEPROC is not loaded.
+        """
+        if Path(self._path).is_dir():
+            with open(self._path + "status", 'w') as f:
+                f.write('start')
+        else:
+            raise FileNotFoundError("{} is missing".format(self._path))
 
     def stop(self):
         """
         Turn off the pru.
+
+        Raises
+        ------
+        FileNotFoundError
+            If remoteproc1 is not found. Most likely the device tree overaly
+            for REMOTEPROC is not loaded.
         """
 
-        with open(self._path + "status", 'w') as f:
-            f.write('stop')
+        if Path(self._path).is_dir():
+            with open(self._path + "status", 'w') as f:
+                f.write('stop')
+        else:
+            raise FileNotFoundError("{} is missing".format(self._path))
 
     def restart(self):
         """
@@ -41,20 +60,38 @@ class PRU:
         -------
         str
             The status of the pru.
+
+        Raises
+        ------
+        FileNotFoundError
+            If remoteproc1 is not found. Most likely the device tree overaly
+            for REMOTEPROC is not loaded.
         """
 
-        with open(self._path + "status", 'r') as f:
-            status = f.read()
+        if Path(self._path).is_dir():
+            with open(self._path + "status", 'r') as f:
+                status = f.read()
+        else:
+            raise FileNotFoundError("{} is missing".format(self._path))
 
         return status
 
     def _load_fw(self):
         """
         Load the firmware onto the pru.
+
+        Raises
+        ------
+        FileNotFoundError
+            If remoteproc1 is not found. Most likely the device tree overaly
+            for REMOTEPROC is not loaded.
         """
 
-        with open("fw/am335x-pru0-fw", 'r') as f:
-            pru_fw = f.read()
+        if Path(self._path).is_dir():
+            with open("fw/am335x-pru0-fw", 'r') as f:
+                pru_fw = f.read()
 
-        with open(self._path + "firmware", 'w') as f:
-            f.write(pru_fw)
+            with open(self._path + "firmware", 'w') as f:
+                f.write(pru_fw)
+        else:
+            raise FileNotFoundError("{} is missing".format(self._path))
