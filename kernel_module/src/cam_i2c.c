@@ -1,30 +1,38 @@
-#include <linux/module.h>         // Core header for loading LKMs into the kernel
+#include <linux/module.h>
 #include <linux/i2c.h>
 #include <linux/delay.h>
 #include <linux/moduleparam.h>
 #include "cam_i2c.h"
 
 
+/** The i2c adapter */
 struct i2c_adapter* i2c_adap;
-
-/** i2c_client is used to interact with the image sensor's i2c slave address */
+/** Used to interact with the image sensor's i2c slave address */
 struct i2c_client* client;
 
 
 int init_cam_i2c(struct i2c_board_info i2c_info) {
+    int ret = 0;
+
     i2c_adap = i2c_get_adapter(2);
 
     client = i2c_new_device(i2c_adap, &i2c_info);
+    if(client == NULL) {
+        printk(KERN_ERR "i2c register failed\n");
+        ret = -ENXIO; 
+    }
 
-    if(client == NULL)
-        return -1; // TODO real ERRNO value
-
-    return 0;
+    return ret;
 }
 
+
 int end_cam_i2c(void) {
-    i2c_unregister_device(client);
-    return 0;
+    int ret;
+
+    if((ret = i2c_unregister_device(client)) < 0)
+        printk(KERN_ERR "i2c unregister failed, returned: %d\n", ret);
+
+    return ret;
 }
 
 
@@ -49,7 +57,7 @@ int init_camera_regs(camera_regs_t *regs){
 
         ret = write_cam_reg(regs[i].reg, regs[i].val);
         if(ret < 0) {
-            printk("ERROR: i2c write reg: %04x val: %04x returned: %d\n",regs[i].reg, regs[i].val, ret);
+            printk(KERN_ERR "i2c write reg: %04x val: %04x returned: %d\n",regs[i].reg, regs[i].val, ret);
             // return ret;
         }
         // mdelay(1);
@@ -59,10 +67,6 @@ int init_camera_regs(camera_regs_t *regs){
 }
 
 
-/**
- * Writes the value to the specified register. The AR013X has 16
- * bit register addresses and values, which differs from "normal" i2c
- */
 int write_cam_reg(uint16_t reg, uint16_t val) {
     int ret;
 
@@ -84,8 +88,6 @@ int write_cam_reg(uint16_t reg, uint16_t val) {
 }
 
 
-// read_cam_reg reads a 16bit value from a 16bit camera register, 
-// returns non-zero on error
 int read_cam_reg(uint16_t reg, uint16_t *val) {
     int ret;
 
@@ -109,7 +111,7 @@ int read_cam_reg(uint16_t reg, uint16_t *val) {
         // the i2c driver to think its receiving while it does a write. 
     	{.addr=0x10, .flags=I2C_M_REV_DIR_ADDR, .len=2, .buf=(char*)&reg_be},
 
-	    // Receive the 16bit value. The I2C_M_RD is for receiving
+	// Receive the 16bit value. The I2C_M_RD is for receiving
     	{.addr=0x10, .flags=I2C_M_RD, .len=2, .buf=(char*)&val_be},
     };
 
