@@ -1,7 +1,8 @@
 """A interface for controlling the camera."""
 
 from datetime import datetime
-from PIL import Image
+import numpy as np
+import cv2
 
 
 CONTEXT_A = 0
@@ -88,6 +89,9 @@ class Camera:
             _DIGITAL_BINNING,
             ]
 
+        self._rows = self._get_camera_setting(_IMAGE_X_SIZE)
+        self._cols = self._get_camera_setting(_IMAGE_Y_SIZE)
+
     def _get_camera_setting(self, setting: str):
         """
         Gets the camera's setting.
@@ -158,42 +162,45 @@ class Camera:
                 )
             raise FileExistsError(msg)
 
-    def capture(self):
+    def capture(self, dir_path="/tmp/", ext=".bmp"):
         """Grab an image from the directory.
+
+        Parameters
+        ----------
+        dir_path
+            Path to save file to.
+
+        Raises
+        ------
+        ValueError
+            if ext is not valid
 
         Returns
         -------
-        image array
-            A random image from the currently-chosen directory.
-
+        str
+            A filepath to the new image
         """
 
         with open(self._capture_path, "rb") as f:
-            img_raw = f.read()
+            imgbuf = f.read()
 
-        return img_raw
+        img = np.frombuffer(imgbuf, dtype=np.uint8).reshape(
+                self._rows,
+                self._cols
+                )
+        img = cv2.cvtColor(img, cv2.COLOR_BayerBG2BGR)
 
-    def capture_and_save(self, path="./"):
-        """Grab an image from pru and save it as a bmp.
+        # try to encode the image with the provided image extension
+        ok, encoded = cv2.imencode(ext, img)
+        if not ok:
+            raise ValueError("{} encode error".format(ext))
 
-        Attributes
-        ----------
-        path: str
-            Path to save new image to.
-        """
+        img_path = dir_path + "capture-" + datetime.now().isoformat() + ext
 
-        if path[-1] != '/':
-            path.apend('/')
+        with open(img_path, "w") as f:
+            f.write(encoded.tobytes())
 
-        now_str = datetime.now().isoformat()
-        new_img_path = path + "capture-" + now_str + ".bmp"
-
-        img_raw = self.capture()
-
-        img = Image.frombytes("L", self.image_size, bytes(img_raw))
-
-        with open(new_img_path, "w") as f:
-            f.write(img)
+        return img_path
 
     # ------------------------------------------------------------------------
     # getters and setters
@@ -251,6 +258,8 @@ class Camera:
 
         self._set_camera_setting(_IMAGE_X_SIZE, size_values[0])
         self._set_camera_setting(_IMAGE_Y_SIZE, size_values[1])
+        self._cols = size_values[0]
+        self._rows = size_values[1]
 
     @property
     def coarse_intergation_time(self):
