@@ -5,4 +5,7 @@ from prucam import Camera, PRU
 pru = PRU()
 pru.start()
 c = Camera()
-print(c.blue_gain)
+
+c.capture(dir_path=".", ext=".jpg")
+
+pru.stop()
