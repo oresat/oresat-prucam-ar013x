@@ -162,7 +162,7 @@ class Camera:
                 )
             raise FileExistsError(msg)
 
-    def capture(self, dir_path="/tmp/", ext=".bmp"):
+    def capture(self, dir_path="/tmp/", ext=".bmp", color=True):
         """Grab an image from the directory.
 
         Parameters
@@ -188,7 +188,9 @@ class Camera:
                 self._rows,
                 self._cols
                 )
-        img = cv2.cvtColor(img, cv2.COLOR_BayerBG2BGR)
+
+        if color is True:
+            img = cv2.cvtColor(img, cv2.COLOR_BayerBG2BGR)
 
         # try to encode the image with the provided image extension
         ok, encoded = cv2.imencode(ext, img)
