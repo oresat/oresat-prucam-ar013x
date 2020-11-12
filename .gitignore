@@ -57,3 +57,12 @@ test_camera
 # pru firmware
 pru_fw.asm
 gen/
+
+# debhelper
+.debhelper/
+*.debhelper*
+*.substvars
+prucam-dkms_*
+debhelper-build-stamp
+files
+prucam-dkms/

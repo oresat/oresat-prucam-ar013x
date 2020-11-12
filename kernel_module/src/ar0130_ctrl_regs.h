@@ -9,10 +9,14 @@
 
 #include "cam_i2c.h"
 
+#ifndef CAM_I2C_ADDR
+#define CAM_I2C_ADDR 0x10
+#endif
 
-//represents the address of the AR0130 image sensor
-struct i2c_board_info ar0130_i2c_info __initdata = { //TODO does this need __initdata
-    I2C_BOARD_INFO("AR0130", 0x10),
+
+/** @breif Represents the address of the AR013X image sensor */
+struct i2c_board_info ar013x_i2c_info __initdata = {
+    I2C_BOARD_INFO("AR013X", CAM_I2C_ADDR),
 };
 
 

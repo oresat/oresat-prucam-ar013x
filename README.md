@@ -10,42 +10,11 @@ Programible Real-time Units. It a microcontroller that shares pins and other res
 ## Supported cameras
 - [AR0130CS](https://www.onsemi.com/pub/Collateral/AR0130CS-D.PDF)
 
-## How to use on Debian
-### Configure device trees for PRU and camera
-- Install the beagleboard device tree files and device tree compiler.
-    - `$ sudo apt install bb-cape-overlays device-tree-compiler`
-- clone `bb.org-overlays`
-    - `$ git clone https://github.com/beagleboard/bb.org-overlays`
-- Build and deploy custom device-tree overlay
-    - `$ cp kernel_module/prudev-00A0.dts bb.org-overlays/src/arm/`
-    - `$ cd bb.org-overlays/`
-    - `$ make`
-    - `$ sudo cp src/arm/prudev-00A0.dtbo /lib/firmware`
-- Modify these lines in `/boot/uEnv.txt` to
-    - `#enable_uboot_cape_universal=1` (comment this line out)
-    - `dtb_overlay=/lib/firmware/prudev-00A0.dtbo`
-    -  If using kernel 4.14 make sure this line is not commented out `uboot_overlay_pru=/lib/firmware/AM335X-PRU-RPROC-4-14-TI-00A0.dtbo` or if using kernel 4.19 make sure this line is not commented out `uboot_overlay_pru=/lib/firmware/AM335X-PRU-RPROC-4-19-TI-00A0.dtbo`.
-- Reboot
-    - `$ sudo reboot`
-### Build and deploy PRU firmware
-- Install the TI's PRU compiler.
-    - `$ sudo apt install ti-pru-cgt-installer`
-- Build and deploy pru firmware
-    - `$ cd pru_code`
-    - `$ sudo ./deploy.sh`
-### Build and insert the kernel module
-- Install the kernel headers
-    - ``$ sudo apt-get install linux-headers-`uname -r` ``
-- Build and insert kernel module
-    - `$ cd kernel_module`
-    - `$ make clean all`
-    - `$ sudo make ins`
-### Run test program
-- Make and run test program
-    - `$ make clean all`
-    - `$ sudo ./test_camera`
-    - This should generate a `capture_001.bmp` file in that directory. scp this
-to your computer to see if it worked!
+
+## Debian packages
+The repos can make two debian package for the star tracker baord: prucam-dkms and python3-prucam.
+- python-dkms: The kernel module that provides the sysfs interfaces to the pru and ar013x camera settings. It is packaged with dkms. See `kernel_module/` for more info.
+- python3-prucam: A python library for interfaceing with the prucam kernel module's sysfs files and the pru sysfs files. It proves control of the camera (capture images and adjust camera settings) and power control options for the pru. Also the library can load pru's firmware. See `python3-prucam/` for more info.
 
 
 [TI PRU-ICSS webpage]:https://processors.wiki.ti.com/index.php/PRU-ICSS
