@@ -2,10 +2,8 @@
 A quick python library for interfacing the the prucam kernel module.
 
 ## dependencies
-- `python3-pillow` aka `python3-pil`
+- `python3-opencv prucam-dkms`
 
-## unittest
-- `$ PYTHONPATH=".:./" pytest`
-
-## build debian package
-- `$ python3 setup.py --command-packages=stdeb.command bdist_deb`
+## Build debian package
+- Install dependencies: `$ sudo apt install python3-stdeb`
+- Make deb package: `$ python3 setup.py --command-packages=stdeb.command bdist_deb`

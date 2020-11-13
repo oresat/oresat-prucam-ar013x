@@ -16,9 +16,9 @@ setup(
     maintainer="Ryan Medick",
     maintainer_email="rmedick@pdx.edu",
     url="https://github.com/oresat/oresat-linux-prucam",
-    packages=['prucam_ar013x'],
+    packages=['prucam'],
     install_requires=[
-        "pil",
+        "opencv",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
