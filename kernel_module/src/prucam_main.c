@@ -387,7 +387,7 @@ static int __init prucam_init(void) {
         printk("i2c init failed\n");
 
     // detect camera
-    if((r = read_cam_reg(0x302A, &cam_ver)) < 0)
+    if((r = read_cam_reg(0x3000, &cam_ver)) < 0)
         printk("i2c read camera version failed\n");
 
     if(cam_ver == 0x2402) {
