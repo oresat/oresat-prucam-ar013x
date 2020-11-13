@@ -16,7 +16,7 @@
 
 /** @breif Represents the address of the AR013X image sensor */
 struct i2c_board_info ar013x_i2c_info __initdata = {
-    I2C_BOARD_INFO("AR013X", CAM_I2C_H),
+    I2C_BOARD_INFO("AR013X", CAM_I2C_ADDR),
 };
 
 

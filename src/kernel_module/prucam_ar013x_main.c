@@ -98,10 +98,12 @@ static ssize_t prucam_context_show(struct device *dev, struct device_attribute *
 
 
 static ssize_t prucam_context_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count) {
-    int temp;
+    int temp, r;
     uint16_t value, reg = 0;
 
-    kstrtoint(buf, 10, &temp);
+    if((r = kstrtoint(buf, 10, &temp)) < 0)
+        return count;
+
     value = (uint16_t)temp;
 
     reg = get_reg(attr->attr.name);

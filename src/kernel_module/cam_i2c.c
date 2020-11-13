@@ -27,12 +27,8 @@ int init_cam_i2c(struct i2c_board_info i2c_info) {
 
 
 int end_cam_i2c(void) {
-    int ret;
-
-    if((ret = i2c_unregister_device(client)) < 0)
-        printk(KERN_ERR "i2c unregister failed, returned: %d\n", ret);
-
-    return ret;
+    i2c_unregister_device(client);
+    return 0;
 }
 
 
