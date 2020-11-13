@@ -9,14 +9,18 @@
 
 #include "cam_i2c.h"
 
+#ifndef CAM_I2C_ADDR
+#define CAM_I2C_ADDR 0x10
+#endif
 
-//represents the address of the AR013X image sensor
-struct i2c_board_info ar013x_i2c_info __initdata = { //TODO does this need __initdata
-    I2C_BOARD_INFO("AR013X", 0x10),
+
+/** @breif Represents the address of the AR013X image sensor */
+struct i2c_board_info ar013x_i2c_info __initdata = {
+    I2C_BOARD_INFO("AR013X", CAM_I2C_ADDR),
 };
 
 
-camera_regs_t startupRegs[] = {
+camera_regs_t ar0130_startupRegs[] = {
     {.reg = 0x301A, .val = 0x0001}, //RESET
     {.reg = 0x0000, .val = 0x0064}, // delay 100 ms
     {.reg = 0x301A, .val = 0x10D8}, //Disable Serial, Enable Parallel, Drive Outputs(no hi-z), lock reg
