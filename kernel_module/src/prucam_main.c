@@ -11,6 +11,7 @@
 #include <linux/moduleparam.h>
 #include <linux/kobject.h>
 #include <linux/sysfs.h>
+#include "ar0130_ctrl_regs.h"
 #include "ar0134_ctrl_regs.h"
 #include "cam_gpio.h"
 #include "cam_i2c.h"
@@ -315,6 +316,8 @@ int pru_remove(struct platform_device* dev) {
  * @return returns 0 if successful
  */
 static int __init prucam_init(void) {
+    camera_regs_t *startupRegs = NULL;
+    uint16_t cam_ver = 0;
     int regDrvr, r;
 
     printk(KERN_INFO "prucam: Initializing the prucam v1\n");
@@ -380,13 +383,28 @@ static int __init prucam_init(void) {
     regDrvr = platform_driver_register(&prudrvr);
     printk(KERN_INFO "prucam: platform driver register returned: %d\n", regDrvr);
 
-    r = init_cam_i2c(ar0134_i2c_info);
-    if(r < 0)
+    if((r = init_cam_i2c(ar013x_i2c_info)) < 0)
         printk("i2c init failed\n");
+
+    // detect camera
+    if((r = read_cam_reg(0x302A, &cam_ver)) < 0)
+        printk("i2c read camera version failed\n");
+
+    if(cam_ver == 0x2402) {
+        printk(KERN_INFO "AR0130 detected");
+        startupRegs = ar0130_startupRegs;
+    }
+    else if(cam_ver == 0x2406) {
+        printk(KERN_INFO "AR0134 detected");
+        startupRegs = ar0134_startupRegs;
+    }
+    else {
+        printk(KERN_ERR "Uknown camera value: 0x%x", cam_ver);
+    }
 
     // init the camera control GPIO
     if((r = init_cam_gpio())) 
-    return r;
+        return r;
 
     camera_enable();
 
@@ -396,7 +414,7 @@ static int __init prucam_init(void) {
     // init camera i2c regs
     r = init_camera_regs(startupRegs);
     if(r < 0)
-        printk("init regs using i2c failed\n");
+        printk(KERN_ERR "init regs using i2c failed\n");
 
     printk(KERN_INFO "Init Complete\n");
     return 0;

@@ -9,14 +9,17 @@
 
 #include "cam_i2c.h"
 
+#ifndef CAM_I2C_ADDR
+#define CAM_I2C_ADDR 0x10
+#endif
 
 //represents the address of the AR0134 image sensor
-struct i2c_board_info ar0134_i2c_info __initdata = { //TODO does this need __initdata
-    I2C_BOARD_INFO("AR0134", 0x10),
+struct i2c_board_info ar0134_i2c_info __initdata = {
+    I2C_BOARD_INFO("AR013X", CAM_I2C_ADDR),
 };
 
 // startup regs for AR0134
-camera_regs_t startupRegs[] = {
+camera_regs_t ar0134_startupRegs[] = {
 
   // from "Column Correction ReTriggering" settings in AR0134REV1.ini
   {.reg = 0x301A, .val = 0x10D8}, // disable streaming
