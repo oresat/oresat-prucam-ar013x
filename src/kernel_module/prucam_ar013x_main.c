@@ -39,15 +39,18 @@ MODULE_VERSION("0.2.0");
 
 static uint16_t get_reg(const char *attr);
 
+
 /** Stores the device number -- determined automatically */
 static int majorNumber;
 /** The device-driver class struct pointer */
 static struct class* prucamClass = NULL;
 /** The device-driver device struct pointer */
 static struct device* prucamDevice = NULL;
+/** the current context */
 static int context = CONTEXT_A;
 uint16_t digital_test = 0x1300;
 uint16_t digital_binning = 0;
+DEFINE_MUTEX(cam_mtx);
 
 
 static ssize_t prucam_context_show(struct device *dev, struct device_attribute *attr, char *buf) {
@@ -472,7 +475,7 @@ static int dev_open(struct inode *inodep, struct file *filep){
 
 
 /** 
- * pru_handshake() writes directly to the the PRU SRSR0 register that manually
+ * Writes directly to the the PRU SRSR0 register that manually
  * triggers PRU system events, which can fire the PRU interrupt bit in R31.
  * Then it writes the address of the physical memory it allocated to a known
  * location in PRU shared RAM. THe PRU reads this and writes the image to this
@@ -513,35 +516,42 @@ static ssize_t dev_read(
         loff_t *offset) {
 
     int handshake;
+    char* physBase;
+    int err = 0;
+
     //TODO address to known location with checksum to other location this can replace the handshake
+    
+    mutex_lock(&cam_mtx);
 
     //signal PRU and tell it where to write the data
     handshake = pru_handshake((int)physAddr);
     if(handshake < 0)  {
         printk(KERN_ERR "PRU Handshake failed: %x\n", (int)physAddr);
+        mutex_unlock(&cam_mtx);
         return -1;
     }
 
     //wait for intc to be triggered
-    volatile int i;
-    for(i = 0 ; i < (1<<27) && !int_triggered ; i++);
+    for(volatile int i = 0; i < (1<<27) && !int_triggered; i++);
 
     if(!int_triggered) {
         printk(KERN_ERR "Interrupt never triggered!\n");
+        mutex_unlock(&cam_mtx);
         return -1;
     }
 
     int_triggered = 0;
-
     printk(KERN_INFO "prucam: Interrupt Triggered!\n");
 
-    char* physBase;
     physBase = (char*)cpu_addr;
 
-    int err = 0;
     err = copy_to_user(buffer, physBase, PIXELS); //TODO use __copy_to_user
-    if(err != 0)
+    if(err != 0) {
+        mutex_unlock(&cam_mtx);
         return -EFAULT;
+    }
+
+    mutex_unlock(&cam_mtx);
 
     return 0;
 }
