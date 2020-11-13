@@ -20,7 +20,7 @@ struct i2c_board_info ar013x_i2c_info __initdata = {
 };
 
 
-camera_regs_t startupRegs[] = {
+camera_regs_t ar0130_startupRegs[] = {
     {.reg = 0x301A, .val = 0x0001}, //RESET
     {.reg = 0x0000, .val = 0x0064}, // delay 100 ms
     {.reg = 0x301A, .val = 0x10D8}, //Disable Serial, Enable Parallel, Drive Outputs(no hi-z), lock reg
