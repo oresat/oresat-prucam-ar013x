@@ -386,6 +386,15 @@ static int __init prucam_init(void) {
     if((r = init_cam_i2c(ar013x_i2c_info)) < 0)
         printk("i2c init failed\n");
 
+    // init the camera control GPIO
+    if((r = init_cam_gpio())) 
+        return r;
+
+    camera_enable();
+
+    // AR0130 datasheet says sleep for a little bit after enabled vregs and clock
+    msleep(10);
+
     // detect camera
     if((r = read_cam_reg(0x3000, &cam_ver)) < 0)
         printk("i2c read camera version failed\n");
@@ -401,15 +410,6 @@ static int __init prucam_init(void) {
     else {
         printk(KERN_ERR "Uknown camera value: 0x%x", cam_ver);
     }
-
-    // init the camera control GPIO
-    if((r = init_cam_gpio())) 
-        return r;
-
-    camera_enable();
-
-    // AR0130 datasheet says sleep for a little bit after enabled vregs and clock
-    msleep(10);
 
     // init camera i2c regs
     r = init_camera_regs(startupRegs);
