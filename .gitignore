@@ -65,4 +65,6 @@ gen/
 prucam-dkms_*
 debhelper-build-stamp
 files
-prucam-dkms/
+prucam-ar013x-dkms/
+*.dtbo
+bb.org-overlays/

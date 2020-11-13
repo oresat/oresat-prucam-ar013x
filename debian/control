@@ -1,0 +1,8 @@
+Source: prucam-dkms
+Maintainer: Ryan Medick <rmedick@pdx.edu>
+Build-Depends: debhelper (>= 10), dkms, device-tree-compiler, ti-pru-cgt-installer
+
+Package: prucam-dkms
+Architecture: armhf
+Depends: ${misc:Depends}
+Description: Kernel module for PRU and ar013x camera

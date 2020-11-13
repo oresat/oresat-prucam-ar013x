@@ -8,7 +8,7 @@ include /usr/share/dpkg/pkg-info.mk
 override_dh_install:
 	mkdir -p etc/modules-load.d
 	echo "prucam" > etc/modules-load.d/prucam.conf
-	dh_install src/* usr/src/prucam-$(DEB_VERSION_UPSTREAM)/
+	dh_install src/kernel_module/* usr/src/prucam-$(DEB_VERSION_UPSTREAM)/
 
 override_dh_dkms:
 	dh_dkms -V $(DEB_VERSION_UPSTREAM)

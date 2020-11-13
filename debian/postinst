@@ -31,4 +31,4 @@ esac
 # End automatically added section
 
 # start module now
-modprobe prucam
+modprobe $DKMS_NAME

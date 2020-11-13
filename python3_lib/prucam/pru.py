@@ -88,7 +88,7 @@ class PRU:
         """
 
         if Path(self._path).is_dir():
-            with open("fw/am335x-pru0-fw", 'r') as f:
+            with open("/lib/firmware/pru_code.out", 'r') as f:
                 pru_fw = f.read()
 
             with open(self._path + "firmware", 'w') as f:
