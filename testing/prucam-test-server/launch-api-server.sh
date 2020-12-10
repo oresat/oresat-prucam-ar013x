@@ -36,18 +36,15 @@ do
 done
 
 # setup PRUs
-cd pru_code
-./deploy.sh
-cd ..
+cd src/pru_code
+./deploy.sh || true
 
-# set up kernel driver. Build first, though not really necessary
-# if it is already built
-cd kernel_module/src
+# set up kernel driver. 
+cd ../kernel_module
+rmmod prucam -f || true # make sure it is removed first
 insmod prucam.ko
 cd ../..
 
 # finally, launch the API server
 ./testing/prucam-test-server/image-api-server.py
-
-
 
