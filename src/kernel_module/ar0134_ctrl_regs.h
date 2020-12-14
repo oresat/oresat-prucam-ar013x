@@ -58,11 +58,11 @@ camera_regs_t ar0134_startupRegs[] = {
     {.reg = 0x30BA, .val = 0x0018},
     {.reg = 0x30D4, .val = 0xE007}, // COLUMN_CORRECTION
 
-    // 12.5MHz settings
+    // 4.93MHz settings; Slow for now to make PRU FW development easier
     {.reg = 0x302E, .val = 0x0009}, 		// PRE_PLL_CLK_DIV
-    {.reg = 0x3030, .val = 0x0096}, 		// PLL_MULTIPLIER
+    {.reg = 0x3030, .val = 0x0085}, 		// PLL_MULTIPLIER
     {.reg = 0x302C, .val = 0x0009}, 		// VT_SYS_CLK_DIV
-    {.reg = 0x302A, .val = 0x0004}, 		// VT_PIX_CLK_DIV
+    {.reg = 0x302A, .val = 0x0009}, 		// VT_PIX_CLK_DIV
     {.reg = 0x0000, .val = 0x0001},               // delay
 
     {.reg = 0x3032, .val = 0x0000}, 		// DIGITAL_BINNING = 0

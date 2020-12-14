@@ -517,6 +517,7 @@ static ssize_t dev_read(
     int handshake;
     char* physBase;
     int err = 0;
+    int_triggered = 0;
 
     //TODO address to known location with checksum to other location this can replace the handshake
     

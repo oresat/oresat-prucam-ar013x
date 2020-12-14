@@ -25,7 +25,7 @@ HEAP_SIZE=0x100
 GEN_DIR=gen
 
 #Common compiler and linker flags (Defined in 'PRU Optimizing C/C++ Compiler User's Guide)
-CFLAGS=-v3 -O2 --display_error_number --endian=little --hardware_mac=on --obj_directory=$(GEN_DIR) --pp_directory=$(GEN_DIR) -ppd -ppa # --keep_asm
+CFLAGS=-v3 -O0 --display_error_number --endian=little --hardware_mac=on --obj_directory=$(GEN_DIR) --pp_directory=$(GEN_DIR) -ppd -ppa --keep_asm
 #Linker flags (Defined in 'PRU Optimizing C/C++ Compiler User's Guide)
 LFLAGS=--reread_libs --warn_sections --stack_size=$(STACK_SIZE) --heap_size=$(HEAP_SIZE) 
 MAP=$(GEN_DIR)/$(PROJ_NAME).map
@@ -33,17 +33,29 @@ MAP=$(GEN_DIR)/$(PROJ_NAME).map
 # NOTE: source files must match pru*_fw.c
 PRU0_OUT=$(GEN_DIR)/pru0_fw.out
 PRU1_OUT=$(GEN_DIR)/pru1_fw.out
+PRU0_OBJECTS=$(GEN_DIR)/pru0_fw.object $(GEN_DIR)/pru0_asm.object
+PRU1_OBJECTS=$(GEN_DIR)/pru1_fw.object $(GEN_DIR)/pru1_asm.object
 
 all: $(PRU0_OUT) $(PRU1_OUT)
 
-$(GEN_DIR)/%.out: %.object $(LINKER_COMMAND_FILE)
+$(PRU0_OUT): $(PRU0_OBJECTS) $(LINKER_COMMAND_FILE)
 	@echo 'Building target: $@'
 	@echo 'linking $<'
-	/usr/bin/clpru $(CFLAGS) -z -i$(PRU_CGT)/lib -i$(PRU_CGT)/include $(LFLAGS) -o $@ $< -m$(MAP) $(LINKER_COMMAND_FILE) --library=libc.a $(LIBS)
+	/usr/bin/clpru $(CFLAGS) -z -i$(PRU_CGT)/lib -i$(PRU_CGT)/include $(LFLAGS) -o $@ $(PRU0_OBJECTS) -m$(MAP) $(LINKER_COMMAND_FILE) --library=libc.a $(LIBS)
 
-%.object: %.c
+$(PRU1_OUT): $(PRU1_OBJECTS) $(LINKER_COMMAND_FILE)
+	@echo 'Building target: $@'
+	@echo 'linking $<'
+	/usr/bin/clpru $(CFLAGS) -z -i$(PRU_CGT)/lib -i$(PRU_CGT)/include $(LFLAGS) -o $@ $(PRU1_OBJECTS) -m$(MAP) $(LINKER_COMMAND_FILE) --library=libc.a $(LIBS)
+
+$(GEN_DIR)/%.object: %.c
 	@mkdir -p $(GEN_DIR)
-	@echo 'compiling $<'
+	@echo 'compiling C file $<'
+	/usr/bin/clpru --include_path=$(PRU_CGT)/include $(INCLUDE) $(CFLAGS) -fe $@ $<
+
+$(GEN_DIR)/%.object: %.s
+	@mkdir -p $(GEN_DIR)
+	@echo 'compiling C file $<'
 	/usr/bin/clpru --include_path=$(PRU_CGT)/include $(INCLUDE) $(CFLAGS) -fe $@ $<
 
 .PHONY: all clean

@@ -103,10 +103,11 @@ echo "-Configuring pinmux"
 	config-pin -q $PRU0_15O
 
 echo "-Rebooting"
-echo "Rebooting pru-core 0"
-sudo su -c 'echo "stop" > /sys/class/remoteproc/remoteproc1/state'
-sudo su -c 'echo "start" > /sys/class/remoteproc/remoteproc1/state'
 echo "Rebooting pru-core 1"
 sudo su -c 'echo "stop" > /sys/class/remoteproc/remoteproc2/state'
 sudo su -c 'echo "start" > /sys/class/remoteproc/remoteproc2/state'
+sleep 0.1s
+echo "Rebooting pru-core 0"
+sudo su -c 'echo "stop" > /sys/class/remoteproc/remoteproc1/state'
+sudo su -c 'echo "start" > /sys/class/remoteproc/remoteproc1/state'
 

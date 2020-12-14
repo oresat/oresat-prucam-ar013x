@@ -78,12 +78,6 @@ def get_image(filename):
     fio = io.FileIO(fd, closefd = False)
 
     # make buffer to read into
-    img = bytearray(pixels)
-
-    # read from prucam into buffer
-    fio.readinto(img)
-
-    # make buffer to read into
     imgbuf = bytearray(pixels)
 
     # read from prucam into buffer
