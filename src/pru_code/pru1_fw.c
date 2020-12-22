@@ -1,35 +1,26 @@
 #include "pru_fw.h"
 
-extern void run_asm1(uint8_t* base, uint8_t* buf);
+// do_transfer is a function defined in assembly
+extern void do_transfer(uint8_t* addr);
 
 void main(void)
 {
   // set the shared var to the known address in shared RAM
   struct pru_shared_vars_t* shared = SHARED_VAR_ADDR;
 
-  int line, chunk;
-  volatile uint8_t* base;
+  uint8_t* image_buf;
 
-  //init PRU registers
+  // init PRU registers
   initPRU();
 
+  // To capture an image, the kernel allocates a hunk of memory, writes the
+  // physicial address of this allocation to a known location in the PRU shared
+  // RAM, and then manually triggers a PRU system event. The PRU detects this
+  // event, reads the memory location, reads in the image data and writes it to
+  // the memory location, and finally triggers an interrupt which tells the
+  // kernel driver that it is done 
   while(1)
   {  
-    __delay_cycles(1);
-
-    // The kernel will write the address of the allocated memory location into
-    // a known shared memory location. Here we read that address from that
-    // location.
-    base = *(volatile uint8_t**)SHARED_RAM; 
-
-    /* To capture an image, the kernel allocates a hunk of memory, writes the
-     * physicial address of this allocation to a known location in the PRU shared
-     * RAM, and then manually triggers a PRU system event. The PRU detects this
-     * event, reads the memory location, reads in the image data and writes it to
-     * the memory location, and finally triggers an interrupt which tells the
-     * kernel driver that it is done 
-     */
-
     // wait for signal from ARM. The kernel driver will manually trigger
     // system event 24, and we check that event here. We do this instead
     // of routing the interrupt to R31 because we want to use R31 for fast
@@ -37,54 +28,20 @@ void main(void)
     while(!(CT_INTC.SECR0 & 1<<24));
     CT_INTC.SICR_bit.STS_CLR_IDX = 24;
 
-    // trigger event 16 to tell PRU0 to start capturing an image
-    __R31 = SYS_EVT_16_TRIGGER;
+    // read the image buffer address from where kernel saved it in shared memory
+    image_buf = *(uint8_t**)SHARED_RAM; 
 
-    for(line = 0; line < ROWS; line++) 
-    {
-      for(chunk = 0; chunk < LINE_CHUNKS; chunk++)
-      {
-        // wait for the signal from PRU0 and clear after
-        while((__R31 & 1U<<31) == 0);
-        CT_INTC.SICR_bit.STS_CLR_IDX = 17;
-
-        //transfer chunk to memory
-        // TODO this is not perfect because we start the memory transfer as the
-        // other core start rewriting this buffer, so this code would likely
-        // break at a faster clock speed. We could fix this by just double
-        // buffering. However, this is just temporary so we can live with it
-        memcpy((char*)base, (char*)shared->buf0, CHUNK_SIZE);
-
-        //offset base address
-        base += CHUNK_SIZE;
-      }
-      /*
-      // wait for the signal from PRU0 and clear after
-      while((__R31 & 1U<<31) == 0);
-      CT_INTC.SICR_bit.STS_CLR_IDX = 17;
-      //run_asm1();
-
-      //transfer line to memory
-      memcpy((char*)base, (char*)shared->buf, COLS);
-
-      //offset base address
-      base += COLS;
-      */
-    }
-
-    // trigger interrupt to tell kernel transfer is complete
-    __R31 = SYS_EVT_20_TRIGGER; // trigger INTC 20
-    // TODO do I need to clear this interrupt? I haven't in the past...
+    // Perform the image transfer. This will trigger the other PRU to start the
+    // image capture, read the data transfered from the PRU(in the scratchpad),
+    // and transfer that data to the image buffer specified by the kernel driver
+    do_transfer(image_buf);
   }
 }
 
 void initPRU() {
   // Clear SYSCFG[STANDBY_INIT] to enable OCP master port
-  // This is supposed to allow us to write to the global memory space?
-  // it works without this, sooo....
   CT_CFG.SYSCFG_bit.STANDBY_INIT = 0;
 
-  // Apparently there is no difference when parallel capture is used!?!?!
   // Parallel Capture Settings
   CT_CFG.GPCFG0_bit.PRU0_GPI_MODE = 0x01; //enable parallel capture
   CT_CFG.GPCFG0_bit.PRU0_GPI_CLK_MODE = 0x01; //capture on positive edge
@@ -93,13 +50,12 @@ void initPRU() {
   CT_INTC.SECR0_bit.ENA_STS_31_0 = 0xFFFFFFFF;
   CT_INTC.SECR1_bit.ENA_STS_63_32 = 0xFFFFFFFF;
 
-  /* Something is broken here. No matter what I try, sys events 20-23 will ONLY
-   * map to INTC 20-23, while the below mapping says 16-19 should map to INTC
-   * 20-23. This makes NO sense according to the documentation. Furthermore,
-   * I seem to only be able to get INTC 20-23 to trigger, regardless of what
-   * events I trigger(I tried SRSR reg). The mappings seem to have almost no
-   * effect. Come back to this.
-   */
+  // Something is broken here. No matter what I try, sys events 20-23 will ONLY
+  // map to INTC 20-23, while the below mapping says 16-19 should map to INTC
+  // 20-23. This makes NO sense according to the documentation. Furthermore,
+  // I seem to only be able to get INTC 20-23 to trigger, regardless of what
+  // events I trigger(I tried SRSR reg). The mappings seem to have almost no
+  // effect. Come back to this.
 
   // map system event 20 --> chan 2 --> host-2 interrupt. This is used for the 
   // PRU to interrupt the MPU 
@@ -124,9 +80,9 @@ void initPRU() {
   CT_INTC.HMR2_bit.HINT_MAP_9 = 0xff; 
 
   // enable sys events 16, 17, 20
-  CT_INTC.EISR = 16;
-  CT_INTC.EISR = 17;
-  CT_INTC.EISR = 20;
+  CT_INTC.EISR = PRU1_TO_PRU0_EVENT;
+  CT_INTC.EISR = PRU0_TO_PRU1_EVENT;
+  CT_INTC.EISR = PRU_TO_KERNEL_EVENT; // TODO define this
 
   // enable host interrupts 0, 1, 2
   CT_INTC.HIEISR = 0;

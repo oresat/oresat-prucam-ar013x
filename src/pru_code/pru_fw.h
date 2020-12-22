@@ -10,13 +10,27 @@
 #define ROWS 960  //rows per image
 #define COLS 1280 //pixels per row
 
-//PRU R31 bit masks
+// R31 image sync signal bit definitions
 #define CLK_BIT 16
-#define CLK_MASK 1<<CLK_BIT
+#define CLK_MASK 1U<<CLK_BIT
 #define VSYNC_BIT 15 
-#define VSYNC_MASK 1<<VSYNC_BIT
+#define VSYNC_MASK 1U<<VSYNC_BIT
 #define HSYNC_BIT 14
-#define HSYNC_MASK 1<<HSYNC_BIT
+#define HSYNC_MASK 1U<<HSYNC_BIT
+
+// R31 inter-PRU interrupt bit definitions
+#define PRU1_TO_PRU0_R31_BIT 30
+#define PRU1_TO_PRU0_R31_MASK 1U<<PRU1_TO_PRU0_R31_BIT
+#define PRU0_TO_PRU1_R31_BIT 31
+#define PRU0_TO_PRU1_R31_MASK 1U<<PRU0_TO_PRU1_R31_BIT
+
+#define PRU1_TO_PRU0_EVENT 16
+#define PRU0_TO_PRU1_EVENT 17
+#define PRU_TO_KERNEL_EVENT 20
+
+// PRU INTC base address constant table offset
+#define INTC_CO_TABLE_ENTRY C0
+#define SICR_REG_OFFSET 0x24
 
 // R31 bit 5 enables the interrupt number written to bits 4:0    
 #define SYS_EVT_ENABLE 1<<5
@@ -26,6 +40,8 @@
 #define SYS_EVT_20_TRIGGER (SYS_EVT_ENABLE | 0x04)
 #define SYS_EVT_16_TRIGGER (SYS_EVT_ENABLE | 0x00)
 #define SYS_EVT_17_TRIGGER (SYS_EVT_ENABLE | 0x01)
+
+#define SCRATCHPAD_BANK_0 10
 
 // number of bytes per transfer chunk
 #define CHUNK_SIZE 32
