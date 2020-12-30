@@ -1,8 +1,8 @@
 # python3-prucam
-A quick python library for interfacing the the prucam kernel module.
+A python library for interfacing the prucam kernel module.
 
 ## Dependencies
-- `python3-opencv prucam-dkms`
+- `python3-opencv-headless prucam-dkms`
 
 ## Build debian package
 - Install dependencies: `$ sudo apt install python3-all python3-stdeb`

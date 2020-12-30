@@ -1,17 +1,18 @@
-""" Setup.py """
+""" OreSat Linux PRUcam library Setup.py """
 
 from setuptools import setup
+import prucam
 
-with open('README.md') as f:
+with open("README.md", "r") as f:
     long_description = f.read()
 
 setup(
-    name="prucam",
-    version="0.1.0",
-    license="GPLv3",
-    description="A quick library to interface with prucam kernel module.",
+    name=prucam.APP_NAME,
+    version=prucam.APP_VERSION,
+    author=prucam.APP_AUTHOR,
+    license=prucam.APP_LICENSE,
+    description=prucam.APP_DESCRIPTION,
     long_description=long_description,
-    author="Ryan Medick",
     author_email="rmedick@pdx.edu",
     maintainer="Ryan Medick",
     maintainer_email="rmedick@pdx.edu",

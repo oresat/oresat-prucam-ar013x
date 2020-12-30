@@ -18,13 +18,9 @@ Programible Real-time Units. It a microcontroller that shares pins and other res
 The repos can make two debian package for the star tracker baord: `prucam-dkms` and `python3-prucam`.
 - **python-dkms**: The kernel module that provides the sysfs interfaces to the pru and ar013x camera settings. This package will also install the compiled pru firmware and the prucam dtbo. **NOTE** when install, it will auto load the module.
 - **python3-prucam**: A python library for interfaceing with the prucam kernel module's sysfs files and the pru sysfs files. It proves control of the camera (capture images and adjust camera settings) and power control options for the pru. Also the library can load pru's firmware. See `python3-lib/` for more info.
-### Build and install prucam-dkms debian package (uses [DKMS])
-- Install build dependencies: ``$ sudo apt install linux-headers-`uname -r` dkms device-tree-compiler ti-pru-cgt-installer debhelper git``
-- Build prucam-dkms Debian package: `$ ./makepkg.sh`
-- Install package dependencies: ``$ sudo apt install linux-headers-`uname -r` dkms device-tree-overlays``
-- Install prucam-dkms Debian package: `$ sudo dpkg -i ../prucam-dkms_*.deb`
-### Build python3-prucam
-- see `readme.md` in `python3_lib`
+### Build prucam Debian packages
+- Install build dependencies: ``$ sudo apt install debhelper linux-headers-`uname -r` dkms device-tree-overlays git python3-setuptools python3-all``
+- Build prucam Debian packages: `$ dpkg-buildpackage -us -uc`
 
 ## Build prucam without packaging
 ### Build and insert the kernel module

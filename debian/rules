@@ -1,11 +1,26 @@
 #!/usr/bin/make -f
 
+DTO_DIR=src/device_tree_overlay
+BB_DTO_DIR=${DTO_DIR}/bb.org-overlays
+
+export PRU_CGT=/usr/share/ti/cgt-pru
+
 include /usr/share/dpkg/pkg-info.mk
 
 %:
-	dh $@ --with dkms
+	dh $@ --with dkms --with python3 --buildsystem=pybuild
 
 override_dh_install:
+	# device tree
+	@if [ ! -d ${BB_DTO_DIR} ]; then\
+	   git clone https://github.com/beagleboard/bb.org-overlays ${BB_DTO_DIR};\
+	fi
+	cp ${DTO_DIR}/prudev-00A0.dts ${BB_DTO_DIR}/src/arm/
+	make -C ${BB_DTO_DIR}
+	cp ${BB_DTO_DIR}/src/arm/prudev-00A0.dtbo ${DTO_DIR}
+	# pru fw
+	make -C src/pru_code clean all
+	# dkms
 	mkdir -p etc/modules-load.d
 	echo "prucam" > etc/modules-load.d/prucam.conf
 	dh_install src/kernel_module/* usr/src/prucam-$(DEB_VERSION_UPSTREAM)/
