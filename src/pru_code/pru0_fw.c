@@ -3,8 +3,6 @@
 // run_asm0 is declared in the *.s assembly file
 extern void capture_frame_8b(void);
 
-// TODO AR0134 datasheet says pixel is on falling edge by default, check this
-
 void main(void)
 {
   // set the shared var to the known address in shared RAM

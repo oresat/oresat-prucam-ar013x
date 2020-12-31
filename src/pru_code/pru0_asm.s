@@ -46,7 +46,7 @@ __timing_routine .macro
   ; the pixel clock to go low and then high. This routine can capture a pixel
   ; clock maximum of 50Mhz. The capture code will wait for the clock to go low
   ; and then high, capture the pixel data, and NOP(or control instruction like 
-  ; xin/xout transfer, triggering an interrupt, or loop maintence.). These 4 
+  ; xin/xout transfer, triggering an interrupt, or loop maintenance.). These 4 
   ; instructions take a minimum of 20ns (5ns * 4), so can sample at a maximum 
   ; rate of 50MHz (1/20ns)  
   .elseif SPEED =  1
@@ -83,6 +83,8 @@ capture_frame_8b:
   wbc r31, VSYNC_BIT
   wbs r31, VSYNC_BIT
 
+; LINE_RESTART is where we branch back to on every subsequent line capture. It
+; comes after VSYNC is asserted but before HSYNC is asserted
 LINE_RESTART:
   ldi r16.w2, COLS ; reload number of pixels in row
 
@@ -247,7 +249,7 @@ CHUNK_RESTART:
   ; with the XOUT instruction. However, we still need to notify the other PRU
   ; core to save the bytes to DRAM and then branch to the beginning of another
   ; chunk transfer. Since we must read a pixel every 4 cycles, below we start
-  ; reading the beginning of the chunk to r22 and interleave the remain
+  ; reading the beginning of the chunk to r22 and interleave the remaining
   ; maintenance instructions and branch back to the beginning of the chunk
   ; transfer minus the couple r22 bytes we read below
 

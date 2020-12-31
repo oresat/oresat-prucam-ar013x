@@ -32,7 +32,7 @@ CFLAGS=-v3 -O0 --display_error_number --endian=little --hardware_mac=on --obj_di
 LFLAGS=--reread_libs --warn_sections --stack_size=$(STACK_SIZE) --heap_size=$(HEAP_SIZE) 
 MAP=$(GEN_DIR)/$(PROJ_NAME).map
 
-# NOTE: source files must match pru*_fw.c
+# NOTE: source files must match pru*_fw.c pru*_asm.s
 PRU0_OUT=$(GEN_DIR)/pru0_fw.out
 PRU1_OUT=$(GEN_DIR)/pru1_fw.out
 PRU0_OBJECTS=$(GEN_DIR)/pru0_fw.object $(GEN_DIR)/pru0_asm.object

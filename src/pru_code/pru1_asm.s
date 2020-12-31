@@ -28,10 +28,10 @@ CHUNK_RESTART:
   sbco &r16, INTC_CO_TABLE_ENTRY, SICR_REG_OFFSET, 4
 
   ; read in 32 bytes of image data from r22-r29
-  xin 10, &r22, 32
+  xin 10, &r22, CHUNK_SIZE
 
   ; store image data to buffer address in R14
-  sbbo &r22, r14, 0, 32
+  sbbo &r22, r14, 0, CHUNK_SIZE
 
   ; increment the image buffer pointer
   add r14, r14, CHUNK_SIZE
