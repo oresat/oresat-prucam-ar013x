@@ -179,6 +179,33 @@ static DEVICE_ATTR(analog_gain, S_IRUGO | S_IWUSR, prucam_context_show, prucam_c
 static DEVICE_ATTR(frame_len_lines, S_IRUGO | S_IWUSR, prucam_context_show, prucam_context_store);
 static DEVICE_ATTR(digital_binning, S_IRUGO | S_IWUSR, prucam_context_show, prucam_context_store);
 
+static struct attribute *prucam_attrs[] = {
+    &dev_attr_context.attr,
+    &dev_attr_x_size.attr,
+    &dev_attr_y_size.attr,
+    &dev_attr_coarse_time.attr,
+    &dev_attr_fine_time.attr,
+    &dev_attr_y_odd_inc.attr,
+    &dev_attr_green1_gain.attr,
+    &dev_attr_blue_gain.attr,
+    &dev_attr_red_gain.attr,
+    &dev_attr_green2_gain.attr,
+    &dev_attr_global_gain.attr,
+    &dev_attr_analog_gain.attr,
+    &dev_attr_frame_len_lines.attr,
+    &dev_attr_digital_binning.attr,
+    NULL
+};
+
+static struct attribute_group prucam_group = {
+    .name = "camera_settings",
+    .attrs = prucam_attrs,
+};
+
+static const struct attribute_group *prucam_groups[] = {
+    &prucam_group,
+    NULL
+};
 
 static int      dev_open(struct inode *, struct file *);
 static int      dev_release(struct inode *, struct file *);
@@ -343,27 +370,7 @@ static int __init prucam_init(void) {
     printk(KERN_INFO "prucam: device class registered correctly\n");
 
     // Register the device driver
-    prucamDevice = device_create(prucamClass, NULL, MKDEV(majorNumber, 0), NULL, DEVICE_NAME);
-
-    // add test sysfs attr
-    r = device_create_file(prucamDevice, &dev_attr_context);
-    if (r < 0)
-        printk(KERN_INFO "failed to create write /sys endpoint - continuing without\n");
-    r = device_create_file(prucamDevice, &dev_attr_x_size);
-    r = device_create_file(prucamDevice, &dev_attr_y_size);
-    r = device_create_file(prucamDevice, &dev_attr_coarse_time);
-    r = device_create_file(prucamDevice, &dev_attr_fine_time);
-    r = device_create_file(prucamDevice, &dev_attr_y_odd_inc);
-    r = device_create_file(prucamDevice, &dev_attr_green1_gain);
-    r = device_create_file(prucamDevice, &dev_attr_blue_gain);
-    r = device_create_file(prucamDevice, &dev_attr_red_gain);
-    r = device_create_file(prucamDevice, &dev_attr_green2_gain);
-    r = device_create_file(prucamDevice, &dev_attr_global_gain);
-    r = device_create_file(prucamDevice, &dev_attr_analog_gain);
-    r = device_create_file(prucamDevice, &dev_attr_frame_len_lines);
-    r = device_create_file(prucamDevice, &dev_attr_digital_binning);
-    if (r < 0)
-        printk(KERN_INFO "failed to create write /sys endpoint - continuing without\n");
+    prucamDevice = device_create_with_groups(prucamClass, NULL, MKDEV(majorNumber, 0), NULL, prucam_groups, DEVICE_NAME);
 
     //set interrupt to not triggered yet
     int_triggered = 0;
@@ -426,22 +433,6 @@ static int __init prucam_init(void) {
 
 static void __exit prucam_exit(void) {
     int r;
-
-    // sysfs attr
-    device_remove_file(prucamDevice, &dev_attr_context);
-    device_remove_file(prucamDevice, &dev_attr_x_size);
-    device_remove_file(prucamDevice, &dev_attr_y_size);
-    device_remove_file(prucamDevice, &dev_attr_coarse_time);
-    device_remove_file(prucamDevice, &dev_attr_fine_time);
-    device_remove_file(prucamDevice, &dev_attr_y_odd_inc);
-    device_remove_file(prucamDevice, &dev_attr_green1_gain);
-    device_remove_file(prucamDevice, &dev_attr_blue_gain);
-    device_remove_file(prucamDevice, &dev_attr_red_gain);
-    device_remove_file(prucamDevice, &dev_attr_green2_gain);
-    device_remove_file(prucamDevice, &dev_attr_global_gain);
-    device_remove_file(prucamDevice, &dev_attr_analog_gain);
-    device_remove_file(prucamDevice, &dev_attr_frame_len_lines);
-    device_remove_file(prucamDevice, &dev_attr_digital_binning);
 
     //unregister platform driver
     platform_driver_unregister(&prudrvr);

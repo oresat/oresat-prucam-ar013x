@@ -67,7 +67,7 @@ class Camera:
     """
 
     def __init__(self):
-        self._sysfs_path = "/sys/class/pru/prucam/"
+        self._sysfs_path = "/sys/class/pru/prucam/camera_settings/"
         self._capture_path = "/dev/prucam"
 
         # camera settings sysfs filepaths
