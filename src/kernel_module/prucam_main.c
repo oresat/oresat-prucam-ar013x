@@ -447,7 +447,6 @@ static void __exit prucam_exit(void) {
     platform_driver_unregister(&prudrvr);
 
     device_destroy(prucamClass, MKDEV(majorNumber, 0));     // remove the device
-    class_unregister(prucamClass);                          // unregister the device class
     class_destroy(prucamClass);                             // remove the device class
     unregister_chrdev(majorNumber, DEVICE_NAME);            // unregister the major number
 
