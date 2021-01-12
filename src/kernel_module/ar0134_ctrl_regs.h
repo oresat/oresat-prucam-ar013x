@@ -36,7 +36,7 @@ camera_regs_t ar0134_startupRegs[] = {
     {.reg = 0x301A, .val = 0x10DC}, // enable streaming
 
     // init settings from Arducam AR0134 config
-    {.reg = 0x3028, .val = 0x0010}, 		// ROW_SPEED = 16
+    {.reg = 0x3028, .val = 0x0010}, 		// change on falling edge, capture on rising
 
     // TODO not sure what this is for, look into that
     {.reg = 0x3082, .val = 0x0029}, //OP MODE CTL
@@ -58,11 +58,11 @@ camera_regs_t ar0134_startupRegs[] = {
     {.reg = 0x30BA, .val = 0x0018},
     {.reg = 0x30D4, .val = 0xE007}, // COLUMN_CORRECTION
 
-    // 12.5MHz settings
-    {.reg = 0x302E, .val = 0x0009}, 		// PRE_PLL_CLK_DIV
-    {.reg = 0x3030, .val = 0x0096}, 		// PLL_MULTIPLIER
-    {.reg = 0x302C, .val = 0x0009}, 		// VT_SYS_CLK_DIV
-    {.reg = 0x302A, .val = 0x0004}, 		// VT_PIX_CLK_DIV
+    // 45MHz settings
+    {.reg = 0x302E, .val = 0x000A}, 		// PRE_PLL_CLK_DIV
+    {.reg = 0x3030, .val = 0x00C8}, 		// PLL_MULTIPLIER
+    {.reg = 0x302C, .val = 0x0004}, 		// VT_SYS_CLK_DIV
+    {.reg = 0x302A, .val = 0x0003}, 		// VT_PIX_CLK_DIV
     {.reg = 0x0000, .val = 0x0001},               // delay
 
     {.reg = 0x3032, .val = 0x0000}, 		// DIGITAL_BINNING = 0

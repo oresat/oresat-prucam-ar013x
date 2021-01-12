@@ -1,52 +1,58 @@
-"""A interface for controlling the pru."""
+"""An interface for controlling the image capture firmware running on the PRUs."""
 
 from pathlib import Path
 
-
-class PRU:
+class PRUCam:
     """
-    A interface for controlling the pru.
+    An interface for controlling the image capture firmware running on PRU0 and
+    PRU1 (remoteproc1 and remoteproc2, respectively).
     """
 
     def __init__(self):
-        self._path = "/sys/class/remoteproc/remoteproc1/"
+        self._pru0_path = "/sys/class/remoteproc/remoteproc1/"
+        self._pru1_path = "/sys/class/remoteproc/remoteproc2/"
+        self._pru0_fw = "prucam_pru0_fw.out"
+        self._pru1_fw = "prucam_pru1_fw.out"
 
     def start(self):
         """
-        Turn on the pru.
+        Starts the PRUs. PRU1 is started before PRU0 because it is the master.
 
         Raises
         ------
         FileNotFoundError
-            If remoteproc1 is not found. Most likely the device tree overaly
-            for REMOTEPROC is not loaded.
+            If remoteproc1 or remoteproc2 is not found. Most likely the 
+            device tree overlay for REMOTEPROC is not loaded.
         """
-        if Path(self._path).is_dir():
-            with open(self._path + "status", 'w') as f:
-                f.write('start')
-        else:
-            raise FileNotFoundError("{} is missing".format(self._path))
+
+        self._check_prus_present()
+
+        with open(self._pru1_path + "status", 'w') as f:
+            f.write('start')
+        with open(self._pru0_path + "status", 'w') as f:
+            f.write('start')
 
     def stop(self):
         """
-        Turn off the pru.
+        Stops the PRUs. Order does not matter for now.
 
         Raises
         ------
         FileNotFoundError
-            If remoteproc1 is not found. Most likely the device tree overaly
-            for REMOTEPROC is not loaded.
+            If remoteproc1 or remoteproc2 is not found. Most likely the device 
+            tree overlay for REMOTEPROC is not loaded.
         """
 
-        if Path(self._path).is_dir():
-            with open(self._path + "status", 'w') as f:
-                f.write('stop')
-        else:
-            raise FileNotFoundError("{} is missing".format(self._path))
+        self._check_prus_present()
+
+        with open(self._pru0_path + "status", 'w') as f:
+            f.write('stop')
+        with open(self._pru1_path + "status", 'w') as f:
+            f.write('stop')
 
     def restart(self):
         """
-        Restarts the pru.
+        Restarts the PRUs.
         """
 
         self.stop()
@@ -59,22 +65,23 @@ class PRU:
         Returns
         -------
         str
-            The status of the pru.
+            The combined status of the PRUs
 
         Raises
         ------
         FileNotFoundError
-            If remoteproc1 is not found. Most likely the device tree overaly
-            for REMOTEPROC is not loaded.
+            If remoteproc1 or remoteproc2 is not found. Most likely the device 
+            tree overlay for REMOTEPROC is not loaded.
         """
 
-        if Path(self._path).is_dir():
-            with open(self._path + "status", 'r') as f:
-                status = f.read()
-        else:
-            raise FileNotFoundError("{} is missing".format(self._path))
+        self._check_prus_present()
 
-        return status
+        with open(self._pru0_path + "status", 'r') as f:
+            pru0_status = f.read()
+        with open(self._pru1_path + "status", 'r') as f:
+            pru1_status = f.read()
+
+        return "PRU0={}; PRU1={}".format(pru0_status, pru1_status)
 
     def _load_fw(self):
         """
@@ -83,15 +90,40 @@ class PRU:
         Raises
         ------
         FileNotFoundError
-            If remoteproc1 is not found. Most likely the device tree overaly
-            for REMOTEPROC is not loaded.
+            If remoteproc1 or remoteproc2 is not found. Most likely the device 
+            tree overlay for REMOTEPROC is not loaded.
         """
 
-        if Path(self._path).is_dir():
-            with open("/lib/firmware/pru_code.out", 'r') as f:
-                pru_fw = f.read()
+        self._check_prus_present()
 
-            with open(self._path + "firmware", 'w') as f:
-                f.write(pru_fw)
-        else:
-            raise FileNotFoundError("{} is missing".format(self._path))
+        # check the FW files are present in /lib/firmware
+        if not Path("/lib/firmware/" + self._pru0_fw).exists():
+            raise FileNotFoundError("{} is missing".format("/lib/firmware/" + self._pru0_fw))
+        elif not Path("/lib/firmware/" + self._pru1_fw).exists():
+            raise FileNotFoundError("{} is missing".format("/lib/firmware/" + self._pru1_fw))
+
+        # write the name of the FW file in /lib/firmware to
+        # /sys/class/remoteproc/remoteprocX/firmware
+        with open(self._pru0_path + "firmware", 'w') as f:
+            f.write(self._pru0_fw)
+        with open(self._pru1_path + "firmware", 'w') as f:
+            f.write(self._pru1_fw)
+
+    
+    def _check_prus_present(self):
+        """
+        Check that the remoteproc1 and remoteproc2 sysfs directories are
+        present.
+
+        Raises
+        ------
+        FileNotFoundError
+            If remoteproc1 or remoteproc2 is not found. Most likely the device 
+            tree overlay for REMOTEPROC is not loaded.
+        """
+
+        if not Path(self._pru0_path).is_dir():
+            raise FileNotFoundError("{} is missing".format(self._pru0_path))
+        elif not Path(self._pru1_path).is_dir():
+            raise FileNotFoundError("{} is missing".format(self._pru1_path))
+

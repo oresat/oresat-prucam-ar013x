@@ -1,18 +1,7 @@
 #! /bin/bash
 
-##############################################################################
-#
-# Source Modified by Pierrick Rauby <PierrickRauby - pierrick.rauby@gmail.com>
-# Based on the examples distributed by TI
-# Copyright (C) 2016 Zubeen Tolani <ZeekHuge - zeekhuge@gmail.com>
-#############################################################################
-
 export PRU_CGT=/usr/share/ti/cgt-pru
 # The script builds, uploads, and starts PRU image capture firmware 
-
-#If changing these variables, make sure the given pin can be muxed to the given pru.
-#PRU_CORE should be either 0 or 1
-PRU_CORE=0
 
 PRU0_0=P1_36 #D0
 PRU0_1=P1_33 #D1
@@ -27,16 +16,13 @@ PRU0_15=P2_18 #HSYNC
 PRU0_16=P1_20 #PIXCLK
 PRU0_15O=P2_33 #OUT
 
-
-#echo "*******************************************************"
-#echo "This must be compiled on the BEAGLEBONE BLACK itself"
-
 echo "-Building project"
 	make clean
 	make || exit 1
 
 echo "-Placing the firmware"
-	cp gen/*.out /lib/firmware/am335x-pru$PRU_CORE-fw
+	sudo cp gen/prucam_pru0_fw.out /lib/firmware/am335x-pru0-fw
+	sudo cp gen/prucam_pru1_fw.out /lib/firmware/am335x-pru1-fw
 
 echo "-Configuring pinmux"
 	KERNEL_VERSION=`uname -r`
@@ -113,14 +99,11 @@ echo "-Configuring pinmux"
 	config-pin -q $PRU0_15O
 
 echo "-Rebooting"
-	if [ $PRU_CORE -eq 0 ]
-	then
-		echo "Rebooting pru-core 0"
-		echo 'stop' > /sys/class/remoteproc/remoteproc1/state
-		echo 'start' > /sys/class/remoteproc/remoteproc1/state
-	else
-		echo "Rebooting pru-core 1"
-		echo 'stop' > /sys/class/remoteproc/remoteproc2/state
-		echo 'start' > /sys/class/remoteproc/remoteproc2/state
-	fi
+echo "Rebooting pru-core 1"
+sudo su -c 'echo "stop" > /sys/class/remoteproc/remoteproc2/state'
+sudo su -c 'echo "start" > /sys/class/remoteproc/remoteproc2/state'
+sleep 0.1s
+echo "Rebooting pru-core 0"
+sudo su -c 'echo "stop" > /sys/class/remoteproc/remoteproc1/state'
+sudo su -c 'echo "start" > /sys/class/remoteproc/remoteproc1/state'
 
