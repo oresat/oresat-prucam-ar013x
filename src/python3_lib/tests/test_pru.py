@@ -1,8 +1,8 @@
 """Unittest for PRU class"""
 
-from prucam import PRU
+from prucam import PRUCam
 
-pru = PRU()
+pru = PRUCam()
 
 
 def test_start():

@@ -16,17 +16,13 @@ PRU0_15=P2_18 #HSYNC
 PRU0_16=P1_20 #PIXCLK
 PRU0_15O=P2_33 #OUT
 
-
-#echo "*******************************************************"
-#echo "This must be compiled on the BEAGLEBONE BLACK itself"
-
 echo "-Building project"
 	make clean
 	make || exit 1
 
 echo "-Placing the firmware"
-	sudo cp gen/pru0_fw.out /lib/firmware/am335x-pru0-fw
-	sudo cp gen/pru1_fw.out /lib/firmware/am335x-pru1-fw
+	sudo cp gen/prucam_pru0_fw.out /lib/firmware/am335x-pru0-fw
+	sudo cp gen/prucam_pru1_fw.out /lib/firmware/am335x-pru1-fw
 
 echo "-Configuring pinmux"
 	KERNEL_VERSION=`uname -r`
