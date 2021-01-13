@@ -158,10 +158,10 @@ int pru_probe(struct platform_device* dev) {
         return -1;
     }
 
-    printk(KERN_INFO "prucam: virtual Address: %x\n", (int)cpu_addr);
+    printk(KERN_INFO "prucam: virtual Address: %p\n", cpu_addr);
 
     physAddr = (int*)dma_handle;
-    printk(KERN_INFO "prucam: physical Address: %x\n", (int)physAddr);
+    printk(KERN_INFO "prucam: physical Address: %p\n", physAddr);
     int_triggered = 0;
 
     return 0;
@@ -358,7 +358,7 @@ static ssize_t dev_read(
     //signal PRU and tell it where to write the data
     handshake = pru_handshake((int)physAddr);
     if(handshake < 0)  {
-        printk(KERN_ERR "PRU Handshake failed: %x\n", (int)physAddr);
+        printk(KERN_ERR "PRU Handshake failed: %p\n", physAddr);
         mutex_unlock(&cam_mtx);
         return -1;
     }
