@@ -18,7 +18,7 @@ def test_start():
 def test_stop():
     """test stoping the pru"""
     try:
-        pru.start()
+        pru.stop()
     except Exception as exc:
         print(exc)
         assert False
@@ -27,6 +27,10 @@ def test_stop():
 
 def test_restart():
     """test restarting the pru"""
+
+    # turn pru back on for test
+    pru.start()
+
     try:
         pru.restart()
     except Exception as exc:
@@ -35,10 +39,10 @@ def test_restart():
     assert True
 
 
-def test_status():
-    """test getting the status of the pru"""
+def test_state():
+    """test getting the state of the pru"""
     try:
-        pru.status()
+        pru.state()
     except Exception as exc:
         print(exc)
         assert False
@@ -47,6 +51,9 @@ def test_status():
 
 def test_load_fw():
     """test loading the pru firmware onto the pru"""
+
+    pru.stop()
+
     try:
         pru._load_fw()
     except Exception as exc:

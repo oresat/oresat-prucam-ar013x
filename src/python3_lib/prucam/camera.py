@@ -27,7 +27,7 @@ _GREEN2_GAIN = "green2_gain"
 _GLOBAL_GAIN = "global_gain"
 _ANALOG_GAIN = "analog_gain"
 _FRAME_LEN_LINES = "frame_len_lines"
-_DIGITAL_BINNING = "digital_binding"
+_DIGITAL_BINNING = "digital_binning"
 
 
 class Camera:
@@ -67,7 +67,7 @@ class Camera:
     """
 
     def __init__(self):
-        self._sysfs_path = "/sys/class/pru/prucam/camera_settings/"
+        self._sysfs_path = "/sys/class/pru/prucam/context_settings/"
         self._capture_path = "/dev/prucam"
 
         # camera settings sysfs filepaths
@@ -94,7 +94,7 @@ class Camera:
 
     def _get_camera_setting(self, setting: str):
         """
-        Gets the camera's setting.
+        Gets the camera"s setting.
 
         attributes
         ----------
@@ -117,7 +117,7 @@ class Camera:
             raise FileExistsError(msg)
 
         try:
-            with open(self._sysfs_path + setting, 'r') as f:
+            with open(self._sysfs_path + setting, "r") as f:
                 value = int(f.read())
         except Exception as exc:
             msg = "Error {} when trying to read from  {}.".format(
@@ -130,7 +130,7 @@ class Camera:
 
     def _set_camera_setting(self, setting: str, value: int):
         """
-        Sets the camera's setting.
+        Sets the camera"s setting.
 
         attributes
         ----------
@@ -152,7 +152,7 @@ class Camera:
             raise FileExistsError(msg)
 
         try:
-            with open(self._sysfs_path + setting, 'w') as f:
+            with open(self._sysfs_path + setting, "w") as f:
                 f.write(value_str)
         except Exception as exc:
             msg = "Error {} when trying to write {} to {}.".format(
@@ -228,7 +228,7 @@ class Camera:
 
     @context.setter
     def context(self, value: int):
-        if value != CONTEXT_A or value != CONTEXT_B:
+        if value != CONTEXT_A and value != CONTEXT_B:
             raise AttributeError("unkown context value")
         return self._set_camera_setting(_CONTEXT, value)
 
