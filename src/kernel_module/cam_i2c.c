@@ -75,12 +75,14 @@ int write_cam_reg(uint16_t reg, uint16_t val) {
     };
 
     ret = i2c_master_send(client, buf, 4);
-    if(ret < 0)
+    if(ret < 0) {
       	printk(KERN_INFO "I2C write for reg %x failed with %d", reg, ret);
-    else if(ret == 0)
+    } else if(ret == 0) {
       	printk(KERN_INFO "No data was written for reg %x", reg);
-
-    return ret;
+        return -EBADMSG;
+    }
+        
+    return 0;
 }
 
 
@@ -89,7 +91,7 @@ int read_cam_reg(uint16_t reg, uint16_t *val) {
 
     // safety first
     if(val == NULL)
-        return -1;
+        return -EINVAL;
 
     // I2C send the little byte first, which is sorta big-endian compared
     // to the little endian uint16 arguments. Convert these values to BE
@@ -116,16 +118,16 @@ int read_cam_reg(uint16_t reg, uint16_t *val) {
     if(ret < 0) {
         printk(KERN_ERR "I2C read at reg %x failed with error code %d", reg, ret);
         return ret;
-
-    // make sure 2 bytes we read
     } else if (ret != 2) {
+        // make sure 2 bytes we read
         printk(KERN_ERR "I2C read at reg %x read incorrect number of bytes %d", reg, ret);
-        return ret;
+        return -EBADMSG;
     }
 
     // convert the BE value we read to LE and save to argument pointer
     *val = be16_to_cpu(val_be);
 
-    printk(KERN_INFO "I2C read for reg 0x%x is 0x%x", reg, *val); // TODO make debug
+    printk(KERN_DEBUG "I2C read for reg 0x%x is 0x%x", reg, *val);
+
     return 0;
 }

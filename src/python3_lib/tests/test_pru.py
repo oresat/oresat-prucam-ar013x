@@ -1,56 +1,44 @@
 """Unittest for PRU class"""
 
+import pytest
 from prucam import PRUCam
 
 pru = PRUCam()
 
 
-def test_start():
+@pytest.fixture
+def prucam():
+    """make the PRUCam obj and  test loading the pru firmware onto the pru"""
+
+    return PRUCam()
+
+
+def test_start(prucam):
     """test staring the pru"""
-    try:
-        pru.start()
-    except Exception as exc:
-        print(exc)
-        assert False
+
+    prucam.start()
     assert True
 
 
-def test_stop():
+def test_stop(prucam):
     """test stoping the pru"""
-    try:
-        pru.start()
-    except Exception as exc:
-        print(exc)
-        assert False
+
+    prucam.stop()
     assert True
 
 
-def test_restart():
+def test_restart(prucam):
     """test restarting the pru"""
-    try:
-        pru.restart()
-    except Exception as exc:
-        print(exc)
-        assert False
+
+    # turn pru back on for test
+    prucam.start()
+
+    prucam.restart()
     assert True
 
 
-def test_status():
-    """test getting the status of the pru"""
-    try:
-        pru.status()
-    except Exception as exc:
-        print(exc)
-        assert False
+def test_status(prucam):
+    """test getting the state of the pru"""
+
+    prucam.status()
     assert True
-
-
-def test_load_fw():
-    """test loading the pru firmware onto the pru"""
-    try:
-        pru._load_fw()
-    except Exception as exc:
-        print(exc)
-        assert False
-    assert True
-

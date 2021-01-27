@@ -11,8 +11,10 @@
 #include <linux/moduleparam.h>
 #include <linux/kobject.h>
 #include <linux/sysfs.h>
+#include "ar013x_regs.h"
 #include "ar0130_ctrl_regs.h"
 #include "ar0134_ctrl_regs.h"
+#include "ar013x_sysfs.h"
 #include "cam_gpio.h"
 #include "cam_i2c.h"
 
@@ -37,148 +39,14 @@ MODULE_VERSION("0.2.2");
 #define CONTEXT_B       1
 
 
-static uint16_t get_reg(const char *attr);
-
-
 /** Stores the device number -- determined automatically */
 static int majorNumber;
 /** The device-driver class struct pointer */
 static struct class* prucamClass = NULL;
 /** The device-driver device struct pointer */
 static struct device* prucamDevice = NULL;
-/** the current context */
-static int context = CONTEXT_A;
-uint16_t digital_test = 0x1300;
 uint16_t digital_binning = 0;
 DEFINE_MUTEX(cam_mtx);
-
-
-static ssize_t prucam_context_show(struct device *dev, struct device_attribute *attr, char *buf) {
-    uint16_t value = 0, reg;
-    int len = 0;
-
-    reg = get_reg(attr->attr.name);
-
-    read_cam_reg(reg, &value);
-
-    if(strcmp(attr->attr.name, "context") == 0){
-        // Context switch bit is 13 in reg 0x30B0
-        //read_cam_reg(0x30B0, &value);
-        value = digital_test;
-        value &= 0xFDFF; // TODO remove this
-        value >>= 13;
-        value &= 0x1;
-    }
-    else if (strcmp(attr->attr.name, "x_size") == 0) {
-        // reg is for x_attr_end
-        value += 1; // x_attr_start is 0
-    }
-    else if (strcmp(attr->attr.name, "y_size") == 0) {
-        // reg is for y_attr_end
-        value -= 1; // y_attr_start is 2
-    }
-    else if (strcmp(attr->attr.name, "analog_gain") == 0) {
-        /** 2 bits in reg 0x30B0, Context A is [5:4] & Context B is [9:8] */
-        value = digital_test; //TODO remove 
-        value >>= context == CONTEXT_A ? 4 : 8;
-        value &= 0x3;
-        digital_test = value; // set global
-    }
-    else if (strcmp(attr->attr.name, "digital_binning") == 0) {
-        /** 2 bits in reg 0x3032, Context A is [1:0] & Context B is [5:4] */
-        value = digital_binning;
-        if(context == CONTEXT_B)
-            value >>= 4;
-        value &= 0x3;
-    }
-
-    len = sprintf(buf, "%d\n", (int)value);
-
-    if (len <= 0)
-        dev_err(dev, "prucam: Invalid sprintf len: %d\n", len);
-
-    return len;
-}
-
-
-static ssize_t prucam_context_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count) {
-    int temp, r;
-    uint16_t value, reg = 0;
-
-    if((r = kstrtoint(buf, 10, &temp)) < 0)
-        return count;
-
-    value = (uint16_t)temp;
-
-    reg = get_reg(attr->attr.name);
-    
-    if(strcmp(attr->attr.name, "context") == 0) {
-        // Context switch bit is 13 in reg 0x30B0
-        value <<= 13;
-        value &= 0x0200;
-        digital_test &= 0xFDFF;
-        value |= digital_binning;
-        digital_test = value; // set global
-    }
-    else if (strcmp(attr->attr.name, "x_size") == 0) {
-        // reg is for x_attr_end
-        value -= 1; // x_attr_start is 0
-    }
-    else if (strcmp(attr->attr.name, "y_size") == 0) {
-        // reg is for y_attr_end
-        value += 1; // y_attr_start is 2
-    }
-    else if (strcmp(attr->attr.name, "analog_gain") == 0) {
-        /** 2 bits in reg 0x30B0, Context A is [5:4] & Context B is [9:8] */
-        if(context == CONTEXT_A) {
-            value <<= 4;
-            value &= 0x0030;
-            digital_test &= 0xFFCF;
-        }
-        else {
-            value <<= 8;
-            value &= 0x0300;
-            digital_test &= 0xFCFF;
-        }
-        value |= digital_test;
-        digital_test = value; // set global
-    }
-    else if (strcmp(attr->attr.name, "digital_binning") == 0) {
-        /** 2 bits in reg 0x3032, Context A is [1:0] & Context B is [5:4] */
-        if(context == CONTEXT_A) {
-            value &= 0x0003;
-            digital_binning &= 0xFFFC;
-        }
-        else {
-            value <<= 4;
-            value &= 0x0030;
-            digital_binning &= 0xFFCF;
-        }
-        value |= digital_binning;
-        digital_binning = value; // set global
-    }
-
-    write_cam_reg(reg, value);
-
-    return count;
-}
-
-
-static DEVICE_ATTR(context, S_IRUGO | S_IWUSR, prucam_context_show, prucam_context_store);
-static DEVICE_ATTR(x_size, S_IRUGO | S_IWUSR, prucam_context_show, prucam_context_store);
-static DEVICE_ATTR(y_size, S_IRUGO | S_IWUSR, prucam_context_show, prucam_context_store);
-static DEVICE_ATTR(coarse_time, S_IRUGO | S_IWUSR, prucam_context_show, prucam_context_store);
-static DEVICE_ATTR(fine_time, S_IRUGO | S_IWUSR, prucam_context_show, prucam_context_store);
-static DEVICE_ATTR(y_odd_inc, S_IRUGO | S_IWUSR, prucam_context_show, prucam_context_store);
-static DEVICE_ATTR(green1_gain, S_IRUGO | S_IWUSR, prucam_context_show, prucam_context_store);
-static DEVICE_ATTR(blue_gain, S_IRUGO | S_IWUSR, prucam_context_show, prucam_context_store);
-static DEVICE_ATTR(red_gain, S_IRUGO | S_IWUSR, prucam_context_show, prucam_context_store);
-static DEVICE_ATTR(green2_gain, S_IRUGO | S_IWUSR, prucam_context_show, prucam_context_store);
-static DEVICE_ATTR(global_gain, S_IRUGO | S_IWUSR, prucam_context_show, prucam_context_store);
-static DEVICE_ATTR(analog_gain, S_IRUGO | S_IWUSR, prucam_context_show, prucam_context_store);
-static DEVICE_ATTR(frame_len_lines, S_IRUGO | S_IWUSR, prucam_context_show, prucam_context_store);
-static DEVICE_ATTR(digital_binning, S_IRUGO | S_IWUSR, prucam_context_show, prucam_context_store);
-
 
 static int      dev_open(struct inode *, struct file *);
 static int      dev_release(struct inode *, struct file *);
@@ -290,10 +158,10 @@ int pru_probe(struct platform_device* dev) {
         return -1;
     }
 
-    printk(KERN_INFO "prucam: virtual Address: %x\n", (int)cpu_addr);
+    printk(KERN_INFO "prucam: virtual Address: %p\n", cpu_addr);
 
     physAddr = (int*)dma_handle;
-    printk(KERN_INFO "prucam: physical Address: %x\n", (int)physAddr);
+    printk(KERN_INFO "prucam: physical Address: %p\n", physAddr);
     int_triggered = 0;
 
     return 0;
@@ -343,27 +211,7 @@ static int __init prucam_init(void) {
     printk(KERN_INFO "prucam: device class registered correctly\n");
 
     // Register the device driver
-    prucamDevice = device_create(prucamClass, NULL, MKDEV(majorNumber, 0), NULL, DEVICE_NAME);
-
-    // add test sysfs attr
-    r = device_create_file(prucamDevice, &dev_attr_context);
-    if (r < 0)
-        printk(KERN_INFO "failed to create write /sys endpoint - continuing without\n");
-    r = device_create_file(prucamDevice, &dev_attr_x_size);
-    r = device_create_file(prucamDevice, &dev_attr_y_size);
-    r = device_create_file(prucamDevice, &dev_attr_coarse_time);
-    r = device_create_file(prucamDevice, &dev_attr_fine_time);
-    r = device_create_file(prucamDevice, &dev_attr_y_odd_inc);
-    r = device_create_file(prucamDevice, &dev_attr_green1_gain);
-    r = device_create_file(prucamDevice, &dev_attr_blue_gain);
-    r = device_create_file(prucamDevice, &dev_attr_red_gain);
-    r = device_create_file(prucamDevice, &dev_attr_green2_gain);
-    r = device_create_file(prucamDevice, &dev_attr_global_gain);
-    r = device_create_file(prucamDevice, &dev_attr_analog_gain);
-    r = device_create_file(prucamDevice, &dev_attr_frame_len_lines);
-    r = device_create_file(prucamDevice, &dev_attr_digital_binning);
-    if (r < 0)
-        printk(KERN_INFO "failed to create write /sys endpoint - continuing without\n");
+    prucamDevice = device_create_with_groups(prucamClass, NULL, MKDEV(majorNumber, 0), NULL, ar013x_groups, DEVICE_NAME);
 
     //set interrupt to not triggered yet
     int_triggered = 0;
@@ -399,7 +247,7 @@ static int __init prucam_init(void) {
     msleep(10);
 
     // detect camera
-    if((r = read_cam_reg(0x3000, &cam_ver)) < 0)
+    if((r = read_cam_reg(AR013X_AD_CHIP_VERSION_REG, &cam_ver)) < 0)
         printk("i2c read camera version failed\n");
 
     if(cam_ver == 0x2402) {
@@ -426,22 +274,6 @@ static int __init prucam_init(void) {
 
 static void __exit prucam_exit(void) {
     int r;
-
-    // sysfs attr
-    device_remove_file(prucamDevice, &dev_attr_context);
-    device_remove_file(prucamDevice, &dev_attr_x_size);
-    device_remove_file(prucamDevice, &dev_attr_y_size);
-    device_remove_file(prucamDevice, &dev_attr_coarse_time);
-    device_remove_file(prucamDevice, &dev_attr_fine_time);
-    device_remove_file(prucamDevice, &dev_attr_y_odd_inc);
-    device_remove_file(prucamDevice, &dev_attr_green1_gain);
-    device_remove_file(prucamDevice, &dev_attr_blue_gain);
-    device_remove_file(prucamDevice, &dev_attr_red_gain);
-    device_remove_file(prucamDevice, &dev_attr_green2_gain);
-    device_remove_file(prucamDevice, &dev_attr_global_gain);
-    device_remove_file(prucamDevice, &dev_attr_analog_gain);
-    device_remove_file(prucamDevice, &dev_attr_frame_len_lines);
-    device_remove_file(prucamDevice, &dev_attr_digital_binning);
 
     //unregister platform driver
     platform_driver_unregister(&prudrvr);
@@ -526,7 +358,7 @@ static ssize_t dev_read(
     //signal PRU and tell it where to write the data
     handshake = pru_handshake((int)physAddr);
     if(handshake < 0)  {
-        printk(KERN_ERR "PRU Handshake failed: %x\n", (int)physAddr);
+        printk(KERN_ERR "PRU Handshake failed: %p\n", physAddr);
         mutex_unlock(&cam_mtx);
         return -1;
     }
@@ -580,44 +412,6 @@ static irq_handler_t irqhandler(
 static int dev_release(struct inode *inodep, struct file *filep){
     printk(KERN_INFO "prucam: Device successfully closed\n");
     return 0;
-}
-
-
-static uint16_t get_reg(const char *name) {
-    uint16_t reg = 0;
-
-    if(strcmp(name, "context") == 0)
-        reg = 0x30B0;
-    else if (strcmp(name, "x_size") == 0)
-        reg = context == CONTEXT_A ? 0x3008 : 0x308E;
-    else if (strcmp(name, "y_size") == 0)
-        reg = context == CONTEXT_A ? 0x3006 : 0x3090;
-    else if (strcmp(name, "coarse_time") == 0)
-        reg = context == CONTEXT_A ? 0x3012 : 0x3016;
-    else if (strcmp(name, "fine_time") == 0)
-        reg = context == CONTEXT_A ? 0x3014 : 0x3018;
-    else if (strcmp(name, "y_odd_inc") == 0)
-        reg = context == CONTEXT_A ? 0x30A6 : 0x30A8;
-    else if (strcmp(name, "green1_gain") == 0)
-        reg = context == CONTEXT_A ? 0x3056 : 0x30BC;
-    else if (strcmp(name, "blue_gain") == 0)
-        reg = context == CONTEXT_A ? 0x3058 : 0x30BE;
-    else if (strcmp(name, "red_gain") == 0)
-        reg = context == CONTEXT_A ? 0x305A : 0x30C0;
-    else if (strcmp(name, "green2_gain") == 0)
-        reg = context == CONTEXT_A ? 0x305C : 0x30C2;
-    else if (strcmp(name, "global_gain") == 0)
-        reg = context == CONTEXT_A ? 0x305E : 0x30C4;
-    else if (strcmp(name, "analog_gain") == 0)
-        reg = 0x30B0;
-    else if (strcmp(name, "frame_len_lines") == 0)
-        reg = context == CONTEXT_A ? 0x300A : 0x30AA;
-    else if (strcmp(name, "digital_binning") == 0)
-        reg = 0x3032;
-    else
-        printk(KERN_ERR "Unkown store attr name: %s", name);
-
-    return reg;
 }
 
 

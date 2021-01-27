@@ -14,7 +14,7 @@ cols = 1280
 rows = 960
 pixels = cols * rows
 path="/dev/prucam"
-prucam_sysfs = "/sys/devices/virtual/pru/prucam/"
+prucam_sysfs = "/sys/devices/virtual/pru/prucam/context_settings/"
 
 # possible camera settings
 cam_settings = [

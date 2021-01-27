@@ -209,3 +209,5 @@ prucam-dkms/
 python3-prucam/
 *.dtbo
 bb.org-overlays/
+*.o.cmd
+*.ko.cmd
