@@ -165,11 +165,11 @@ camera_regs_t ar0130_startupRegs[] = {
     {AR013X_AD_RESET_REGISTER, 0x10D8},
     {AR013X_AD_HDR_COMP, 0x0001},
 
-    // power up sequence 7 - 12.5MHz settings
-    {AR013X_AD_PLL_MULTIPLIER, 0x0096},
-    {AR013X_AD_PRE_PLL_CLK_DIV, 0x0009},
-    {AR013X_AD_VT_SYS_CLK_DIV, 0x0006}, // was 0x0C
-    {AR013X_AD_VT_PIX_CLK_DIV, 0x0004}, // was 0x0A
+    // power up sequence 7 - 45MHz settings
+    {AR013X_AD_PRE_PLL_CLK_DIV, 0x000A},
+    {AR013X_AD_PLL_MULTIPLIER, 0x00CB},
+    {AR013X_AD_VT_SYS_CLK_DIV, 0x0004},
+    {AR013X_AD_VT_PIX_CLK_DIV, 0x0003},
 
     // power up sequence 8 - wait for PLL to lock
     {0x0000, 0x0001}, // delay 1 ms
