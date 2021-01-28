@@ -396,3 +396,189 @@ ssize_t ar013x_general_store(struct device *dev, struct device_attribute *attr, 
 
     return count;
 }
+
+// ---------------------------------------------------------------------------
+// Auto exposure
+
+ssize_t ar013x_auto_exposure_show(struct device *dev, struct device_attribute *attr, char *buf) {
+    uint16_t value = 0;
+    int len = 0, r;
+
+    r = read_cam_reg(AR013X_AD_AE_CTRL_REG, &value);
+    if (r != 0)
+        return r;
+
+    if (strcmp(attr->attr.name, "min_analog_gain") == 0) { // bits [6:5]
+        value >>= 5; 
+        value &= 0x3;
+    } else if (strcmp(attr->attr.name, "auto_dg_en") == 0) { // bit [4]
+        value >>= 4;
+        value &= 0x1;
+    } else if (strcmp(attr->attr.name, "auto_gd_en") == 0) { // bit [1]
+        value >>= 1;
+        value &= 0x1;
+    } else if (strcmp(attr->attr.name, "ae_enable") == 0) {// bit [0]
+        value &= 0x1;
+    }
+
+    len = sprintf(buf, "%d\n", value);
+    if (len <= 0)
+        dev_err(dev, "prucam: invalid sprintf len %d", len);
+
+    return len;
+}
+
+ssize_t ar013x_auto_exposure_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count) {
+    uint16_t input_value, reg_value;
+    int temp, r, size = 0;
+
+    if ((r = kstrtoint(buf, 10, &temp)) < 0) {
+        dev_err(dev, "prucam: %s store value was not a interger", attr->attr.name);
+        return r;
+    }
+
+    input_value = (uint16_t)temp;
+
+    // make sure valid size
+    if (strcmp(attr->attr.name, "min_analog_gain") == 0)
+        size = 0x3; // bits [6:5]
+    else
+        size = 0x1; // everthing else is 1 bit
+
+    if (input_value > size) { 
+        dev_err(dev, "prucam: %s must be <= %d", attr->attr.name, size);
+        return -EINVAL;
+    }
+
+    r = read_cam_reg(AR013X_AD_AE_CTRL_REG, &reg_value);
+    if (r != 0)
+        return r;
+
+    if (strcmp(attr->attr.name, "min_analog_gain") == 0) { // bits [6:5]
+        input_value <<= 5;
+        input_value &= 0x0060;
+        reg_value &= 0xFF8F;
+    } else if (strcmp(attr->attr.name, "auto_dg_en") == 0) { // bit [4]
+        input_value <<= 4;
+        input_value &= 0x0010;
+        reg_value &= 0xFFEF;
+    } else if (strcmp(attr->attr.name, "auto_gd_en") == 0) { // bit [1]
+        input_value <<= 1;
+        input_value &= 0x0002;
+        reg_value &= 0xFFFD;
+    } else if (strcmp(attr->attr.name, "ae_enable") == 0) {// bit [0]
+        input_value &= 0x0001;
+        reg_value &= 0xFFFE;
+
+        // disable digital binning
+        if((r = write_cam_reg(AR013X_AD_DIGITAL_BINNING, 0)) != 0)
+            return r;
+    }
+
+    reg_value |= input_value;
+
+    r = write_cam_reg(AR013X_AD_AE_CTRL_REG, reg_value);
+    if (r != 0)
+        return r;
+
+    return count;
+}
+
+ssize_t ar013x_ae_general_show(struct device *dev, struct device_attribute *attr, char *buf) {
+    uint16_t value = 0, reg = 0;
+    int len = 0, r;
+
+    if (strcmp(attr->attr.name, "ae_roi_x_start_offset") == 0)
+        reg = AR013X_AD_AE_ROI_X_START_OFFSET;
+    else if (strcmp(attr->attr.name, "ae_roi_y_start_offset") == 0)
+        reg = AR013X_AD_AE_ROI_Y_START_OFFSET;
+    else if (strcmp(attr->attr.name, "ae_roi_x_size") == 0)
+        reg = AR013X_AD_AE_ROI_X_SIZE;
+    else if (strcmp(attr->attr.name, "ae_roi_y_size") == 0)
+        reg = AR013X_AD_AE_ROI_Y_SIZE;
+    else if (strcmp(attr->attr.name, "ae_luma_target") == 0)
+        reg = AR013X_AD_AE_LUMA_TARGET_REG;
+    else if (strcmp(attr->attr.name, "ae_min_ev_step") == 0)
+        reg = AR013X_AD_AE_MIN_EV_STEP_REG;
+    else if (strcmp(attr->attr.name, "ae_max_ev_step") == 0)
+        reg = AR013X_AD_AE_MAX_EV_STEP_REG;
+    else if (strcmp(attr->attr.name, "ae_damp_offset") == 0)
+        reg = AR013X_AD_AE_DAMP_OFFSET_REG;
+    else if (strcmp(attr->attr.name, "ae_damp_gain") == 0)
+        reg = AR013X_AD_AE_DAMP_GAIN_REG;
+    else if (strcmp(attr->attr.name, "ae_damp_max") == 0)
+        reg = AR013X_AD_AE_DAMP_MAX_REG;
+    else if (strcmp(attr->attr.name, "ae_min_exposure") == 0)
+        reg = AR013X_AD_AE_MIN_EXPOSURE_REG;
+    else if (strcmp(attr->attr.name, "ae_max_exposure") == 0)
+        reg = AR013X_AD_AE_MAX_EXPOSURE_REG;
+    else if (strcmp(attr->attr.name, "ae_ag_exposure_hi") == 0)
+        reg = AR013X_AD_AE_AG_EXPOSURE_HI;
+    else if (strcmp(attr->attr.name, "ae_ag_exposure_lo") == 0)
+        reg = AR013X_AD_AE_AG_EXPOSURE_LO;
+    else if (strcmp(attr->attr.name, "ae_dark_cur_thresh") == 0)
+        reg = AR013X_AD_AE_DARK_CUR_THRESH_REG;
+    else
+        dev_err(dev, "prucam: unknown show name %s", attr->attr.name);
+
+    r = read_cam_reg(reg, &value);
+    if (r != 0)
+        return r;
+
+    len = sprintf(buf, "%d\n", value);
+    if (len <= 0)
+        dev_err(dev, "prucam: invalid sprintf len %d", len);
+
+    return len;
+}
+
+ssize_t ar013x_ae_general_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count) {
+    uint16_t input_value, reg = 0;
+    int r, temp;
+
+    if ((r = kstrtoint(buf, 10, &temp)) < 0) {
+        dev_err(dev, "prucam: %s store value was not a interger", attr->attr.name);
+        return r;
+    }
+
+    input_value = (uint16_t)temp;
+
+    if (strcmp(attr->attr.name, "ae_roi_x_start_offset") == 0)
+        reg = AR013X_AD_AE_ROI_X_START_OFFSET;
+    else if (strcmp(attr->attr.name, "ae_roi_y_start_offset") == 0)
+        reg = AR013X_AD_AE_ROI_Y_START_OFFSET;
+    else if (strcmp(attr->attr.name, "ae_roi_x_size") == 0)
+        reg = AR013X_AD_AE_ROI_X_SIZE;
+    else if (strcmp(attr->attr.name, "ae_roi_y_size") == 0)
+        reg = AR013X_AD_AE_ROI_Y_SIZE;
+    else if (strcmp(attr->attr.name, "ae_luma_target") == 0)
+        reg = AR013X_AD_AE_LUMA_TARGET_REG;
+    else if (strcmp(attr->attr.name, "ae_min_ev_step") == 0)
+        reg = AR013X_AD_AE_MIN_EV_STEP_REG;
+    else if (strcmp(attr->attr.name, "ae_max_ev_step") == 0)
+        reg = AR013X_AD_AE_MAX_EV_STEP_REG;
+    else if (strcmp(attr->attr.name, "ae_damp_offset") == 0)
+        reg = AR013X_AD_AE_DAMP_OFFSET_REG;
+    else if (strcmp(attr->attr.name, "ae_damp_gain") == 0)
+        reg = AR013X_AD_AE_DAMP_GAIN_REG;
+    else if (strcmp(attr->attr.name, "ae_damp_max") == 0)
+        reg = AR013X_AD_AE_DAMP_MAX_REG;
+    else if (strcmp(attr->attr.name, "ae_min_exposure") == 0)
+        reg = AR013X_AD_AE_MIN_EXPOSURE_REG;
+    else if (strcmp(attr->attr.name, "ae_max_exposure") == 0)
+        reg = AR013X_AD_AE_MAX_EXPOSURE_REG;
+    else if (strcmp(attr->attr.name, "ae_ag_exposure_hi") == 0)
+        reg = AR013X_AD_AE_AG_EXPOSURE_HI;
+    else if (strcmp(attr->attr.name, "ae_ag_exposure_lo") == 0)
+        reg = AR013X_AD_AE_AG_EXPOSURE_LO;
+    else if (strcmp(attr->attr.name, "ae_dark_cur_thresh") == 0)
+        reg = AR013X_AD_AE_DARK_CUR_THRESH_REG;
+    else
+        dev_err(dev, "prucam: unknown show name %s", attr->attr.name);
+
+    r = write_cam_reg(reg, input_value);
+    if (r != 0)
+        return r;
+
+    return count;
+}
