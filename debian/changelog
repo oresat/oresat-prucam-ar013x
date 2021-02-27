@@ -1,3 +1,10 @@
+
+prucam (0.3.1-0) buster; urgency=medium
+
+  * Added auto exposure to kernel module.
+
+ -- Ryan Medick <rmedick@pdx.edu>  Sat, 27 Feb 2021 13:39:20 -0700
+
 prucam (0.3.0-0) buster; urgency=low
 
   * Update python library to handle controlling both PRUs.
