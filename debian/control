@@ -5,7 +5,7 @@ Homepage: https://github.com/oresat/oresat-linux-prucam
 
 Package: prucam-dkms
 Architecture: armhf
-Depends: ${misc:Depends}
+Depends: ${misc:Depends}, dkms
 Description: Kernel module for PRU and ar013x camera
 
 Package: python3-prucam

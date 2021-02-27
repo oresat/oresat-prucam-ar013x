@@ -4,7 +4,7 @@ from .camera import Camera, CONTEXT_A, CONTEXT_B
 from .pru import PRUCam
 
 MAJOR = 0
-MINOR = 1
+MINOR = 3
 PATCH = 0
 
 APP_NAME = "prucam"

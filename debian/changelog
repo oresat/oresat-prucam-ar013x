@@ -1,17 +1,25 @@
-prucam-dkms (0.2.2-1) buster; urgency=medium
+prucam (0.3.0-0) buster; urgency=low
+
+  * Update python library to handle controlling both PRUs.
+  * Overhauled sysfs camera setting.
+  * Now the image capture is handled by one PRU while the transfer to the kernel module is handled by the other. The critical loop of boot is now written in assembly.
+
+ -- Ryan Medick <rmedick@pdx.edu>  Sat, 27 Feb 2021 12:42:27 -0700
+
+prucam (0.2.2-1) buster; urgency=medium
 
   * Add check for chroot environment in postinst before modprobe.
 
  -- Ryan Medick <rmedick@pdx.edu>  Mon, 14 Dec 2020 18:44:00 -0700
 
-prucam-dkms (0.2.2-0) buster; urgency=low
+prucam (0.2.2-0) buster; urgency=low
 
   * Fixed ar0134 configs.
 
  -- Ryan Medick <rmedick@pdx.edu>  Fri, 20 Nov 2020 10:51:40 -0700
 
 
-prucam-dkms (0.2.1-0) buster; urgency=low
+prucam (0.2.1-0) buster; urgency=low
 
   * Bug fixes.
   * Added support for ar0134.
@@ -19,7 +27,7 @@ prucam-dkms (0.2.1-0) buster; urgency=low
 
  -- Ryan Medick <rmedick@pdx.edu>  Fri, 13 Nov 2020 10:58:40 -0700
 
-prucam-dkms (0.2.0-0) buster; urgency=low
+prucam (0.2.0-0) buster; urgency=low
 
   * Initial package.
 
