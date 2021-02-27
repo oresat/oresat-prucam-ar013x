@@ -1,5 +1,10 @@
+prucam (0.3.1-1) buster; urgency=high
 
-prucam (0.3.1-0) buster; urgency=medium
+  * Fixed dkms version in debian scripts.
+
+ -- Ryan Medick <rmedick@pdx.edu>  Sat, 27 Feb 2021 15:16:25 -0700
+
+prucam (0.3.1-0) buster; urgency=low
 
   * Added auto exposure to kernel module.
 
