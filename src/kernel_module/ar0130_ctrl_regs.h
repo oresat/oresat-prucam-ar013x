@@ -135,7 +135,6 @@ camera_regs_t ar0130_startupRegs[] = {
     // from AR0130REV1.ini in ON Semi software suite,
     // "[AR0130 Rev1 Optimized settings DCDS 5-7-2013]"
     // more black magic registers
-    {0x309E, 0x0000}, //RESERVED // DCDS_PROG_START_ADDR
     {AR013X_AD_DATA_PEDESTAL, 0x00C8},
     {0x3EDA, 0x0F03}, // DAC_LD_14_15
     {0x3EDE, 0xC005}, // DAC_LD_18_19
@@ -183,6 +182,7 @@ camera_regs_t ar0130_startupRegs[] = {
     // power up sequence 9 - enable streaming
     {AR013X_AD_RESET_REGISTER, 0x10DC},  //Ensable Serial, Enable Parallel, Drive Outputs(no hi-z), lock reg, streaming mode(not low power)
     {0x0000, 0x0064}, // delay 100 ms
+    {0x0000, 0x0000}, // Zeros mark end of sequence
 };
 
 #endif
