@@ -107,6 +107,7 @@ camera_regs_t ar0134_startupRegs[] = {
     // power up sequence 9 - enable streaming
     {AR013X_AD_RESET_REGISTER, 0x10DC},  //Ensable Serial, Enable Parallel, Drive Outputs(no hi-z), lock reg, streaming mode(not low power)
     {0x0000, 0x0064}, // delay
+    {0x0000, 0x0000}, // Zeros mark end of sequence
 };
 
 #endif /* AR0134_CTRL_REGS_H */
