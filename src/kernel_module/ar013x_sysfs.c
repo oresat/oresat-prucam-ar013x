@@ -390,7 +390,7 @@ ssize_t ar013x_general_store(struct device *dev, struct device_attribute *attr, 
     else
         dev_err(dev, "prucam: unknown store name %s", attr->attr.name);
 
-    r = write_cam_reg(AR013X_AD_DIGITAL_BINNING, value);
+    r = write_cam_reg(reg, value);
     if (r != 0)
         return r;
 

@@ -29,10 +29,3 @@ case "$1" in
 	;;
 esac
 # End automatically added section
-
-# check if in chroot environment
-is_chroot=`ischroot; echo $?`
-if [ $is_chroot -eq 1 ]; then
-	# not in chroot, load module
-	modprobe $DKMS_NAME
-fi
