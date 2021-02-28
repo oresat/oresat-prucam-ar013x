@@ -95,13 +95,12 @@ camera_regs_t ar0134_startupRegs[] = {
     {AR013X_AD_Y_ODD_INC_CB, 0x0001},
 
     {AR013X_AD_READ_MODE, 0x0000},
-    {AR013X_AD_EMBEDDED_DATA_CTRL, 0x1982},
     {AR013X_AD_HIPSI_CONTROL_STATUS, 0x8000},
 
     {AR013X_AD_DIGITAL_TEST, 0x1300},
     {0x0000, 0x0064}, // delay
     {AR013X_AD_AE_CTRL_REG, 0x0000},
-    {AR013X_AD_EMBEDDED_DATA_CTRL, 0x1802},
+    {AR013X_AD_EMBEDDED_DATA_CTRL, 0x1982}, // enable embedded data, this is needed for auto exposure
     {AR013X_AD_TEST_PATTERN_MODE, 0x0000},
 
     // power up sequence 9 - enable streaming

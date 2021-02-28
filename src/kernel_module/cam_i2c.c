@@ -116,18 +116,18 @@ int read_cam_reg(uint16_t reg, uint16_t *val) {
     // start the i2c tranfers and check the return val
     ret = i2c_transfer(i2c_adap, msg, 2);
     if(ret < 0) {
-        printk(KERN_ERR "I2C read at reg %x failed with error code %d", reg, ret);
+        printk(KERN_ERR "I2C read at reg %x failed with error code %d\n", reg, ret);
         return ret;
     } else if (ret != 2) {
         // make sure 2 bytes we read
-        printk(KERN_ERR "I2C read at reg %x read incorrect number of bytes %d", reg, ret);
+        printk(KERN_ERR "I2C read at reg %x read incorrect number of bytes %d\n", reg, ret);
         return -EBADMSG;
     }
 
     // convert the BE value we read to LE and save to argument pointer
     *val = be16_to_cpu(val_be);
 
-    printk(KERN_DEBUG "I2C read for reg 0x%x is 0x%x", reg, *val);
+    printk(KERN_DEBUG "I2C read for reg 0x%x is 0x%x\n", reg, *val);
 
     return 0;
 }

@@ -454,15 +454,15 @@ ssize_t ar013x_auto_exposure_store(struct device *dev, struct device_attribute *
     if (r != 0)
         return r;
 
-    if (strcmp(attr->attr.name, "min_analog_gain") == 0) { // bits [6:5]
+    if (strcmp(attr->attr.name, "ae_min_ana_gain") == 0) { // bits [6:5]
         input_value <<= 5;
         input_value &= 0x0060;
-        reg_value &= 0xFF8F;
-    } else if (strcmp(attr->attr.name, "auto_dg_en") == 0) { // bit [4]
+        reg_value &= 0xFF9F;
+    } else if (strcmp(attr->attr.name, "ae_dg_en") == 0) { // bit [4]
         input_value <<= 4;
         input_value &= 0x0010;
         reg_value &= 0xFFEF;
-    } else if (strcmp(attr->attr.name, "auto_gd_en") == 0) { // bit [1]
+    } else if (strcmp(attr->attr.name, "ae_ag_en") == 0) { // bit [1]
         input_value <<= 1;
         input_value &= 0x0002;
         reg_value &= 0xFFFD;
