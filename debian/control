@@ -10,5 +10,5 @@ Description: Kernel module for PRU and ar013x camera
 
 Package: python3-prucam
 Architecture: all
-Depends: ${misc:Depends}, ${python3:Depends}, python3-opencv-headless, prucam-dkms
+Depends: ${misc:Depends}, ${python3:Depends}, python3-opencv, prucam-dkms
 Description: A python library for interfacing the prucam kernel module

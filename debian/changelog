@@ -1,3 +1,9 @@
+prucam (0.3.1-2) buster; urgency=high
+
+  * Python lib now depends on python3-opencv.
+
+ -- Ryan Medick <rmedick@pdx.edu>  Thu, 08 Apr 2021 09:18:25 -0700
+
 prucam (0.3.1-1) buster; urgency=high
 
   * Fixed dkms version in debian scripts.

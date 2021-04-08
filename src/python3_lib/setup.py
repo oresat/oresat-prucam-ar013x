@@ -19,7 +19,7 @@ setup(
     url="https://github.com/oresat/oresat-linux-prucam",
     packages=['prucam'],
     install_requires=[
-        "opencv",
+        "opencv-python",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
