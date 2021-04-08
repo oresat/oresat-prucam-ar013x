@@ -11,6 +11,7 @@ include /usr/share/dpkg/pkg-info.mk
 	dh $@ --with dkms --with python3 --buildsystem=pybuild
 
 override_dh_install:
+	dh_install
 	# device tree
 	@if [ ! -d ${BB_DTO_DIR} ]; then\
 	   git clone https://github.com/beagleboard/bb.org-overlays ${BB_DTO_DIR};\
@@ -28,8 +29,4 @@ override_dh_install:
 override_dh_dkms:
 	dh_dkms -V $(DEB_VERSION_UPSTREAM)
 
-override_dh_auto_configure:
-override_dh_auto_build:
 override_dh_auto_test:
-override_dh_auto_install:
-override_dh_auto_clean:

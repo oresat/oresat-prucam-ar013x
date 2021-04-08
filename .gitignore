@@ -211,3 +211,4 @@ python3-prucam/
 bb.org-overlays/
 *.o.cmd
 *.ko.cmd
+*.pybuild/
