@@ -157,8 +157,8 @@ ssize_t ar013x_ae_general_show(struct device *dev, struct device_attribute *attr
 ssize_t ar013x_ae_general_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count);
 
 DEVICE_ATTR(ae_enable, S_IRUGO | S_IWUSR, ar013x_auto_exposure_show, ar013x_auto_exposure_store);
-DEVICE_ATTR(ae_ag_en, S_IRUGO | S_IWUSR, ar013x_ae_general_show, ar013x_ae_general_store);
-DEVICE_ATTR(ae_dg_en, S_IRUGO | S_IWUSR, ar013x_ae_general_show, ar013x_ae_general_store);
+DEVICE_ATTR(ae_ag_en, S_IRUGO | S_IWUSR, ar013x_auto_exposure_show, ar013x_auto_exposure_store);
+DEVICE_ATTR(ae_dg_en, S_IRUGO | S_IWUSR, ar013x_auto_exposure_show, ar013x_auto_exposure_store);
 DEVICE_ATTR(ae_min_ana_gain, S_IRUGO | S_IWUSR, ar013x_ae_general_show, ar013x_ae_general_store);
 DEVICE_ATTR(ae_roi_x_start_offset, S_IRUGO | S_IWUSR, ar013x_ae_general_show, ar013x_ae_general_store);
 DEVICE_ATTR(ae_roi_y_start_offset, S_IRUGO | S_IWUSR, ar013x_ae_general_show, ar013x_ae_general_store);

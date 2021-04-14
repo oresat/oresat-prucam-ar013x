@@ -176,11 +176,11 @@ camera_regs_t ar0130_startupRegs[] = {
     {AR013X_AD_DIGITAL_TEST, 0x1300},
     {0x0000, 0x0064}, // delay 100 ms
     {AR013X_AD_AE_CTRL_REG, 0x0000},
-    {AR013X_AD_EMBEDDED_DATA_CTRL, 0x1802},
+    {AR013X_AD_EMBEDDED_DATA_CTRL, 0x1982}, // enable embedded data, this is needed for auto exposure
     {AR013X_AD_TEST_PATTERN_MODE, 0x0000},
 
     // power up sequence 9 - enable streaming
-    {AR013X_AD_RESET_REGISTER, 0x10DC},  //Ensable Serial, Enable Parallel, Drive Outputs(no hi-z), lock reg, streaming mode(not low power)
+    {AR013X_AD_RESET_REGISTER, 0x10DC},  // disable Serial, Enable Parallel, Drive Outputs(no hi-z), lock reg, streaming mode(not low power)
     {0x0000, 0x0064}, // delay 100 ms
     {0x0000, 0x0000}, // Zeros mark end of sequence
 };
