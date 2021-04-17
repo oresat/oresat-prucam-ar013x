@@ -1,6 +1,8 @@
 """A interface for controlling the camera."""
 
 from datetime import datetime
+import os
+import io
 import numpy as np
 import cv2
 
@@ -169,8 +171,8 @@ class Camera:
             _AE_ROI_Y_START_OFFSET,
         ]
 
-        self._rows = self._get_camera_setting(_IMAGE_X_SIZE)
-        self._cols = self._get_camera_setting(_IMAGE_Y_SIZE)
+        self._cols = self._get_camera_setting(_IMAGE_X_SIZE)
+        self._rows = self._get_camera_setting(_IMAGE_Y_SIZE)
 
     def _get_camera_setting(self, setting: str):
         """
@@ -261,14 +263,21 @@ class Camera:
             A filepath to the new image
         """
 
-        with open(self._capture_path, "rb") as f:
-            imgbuf = f.read()
+        # Read raw data
+        fd = os.open(self._capture_path, os.O_RDWR)
+        fio = io.FileIO(fd, closefd = False)
+        imgbuf = bytearray(self._rows * self._cols)
+        fio.readinto(imgbuf)
+        fio.close()
+        os.close(fd)
 
+        # Convert to image
         img = np.frombuffer(imgbuf, dtype=np.uint8).reshape(
             self._rows,
             self._cols
         )
 
+        # Convert to color
         if color is True:
             img = cv2.cvtColor(img, cv2.COLOR_BayerBG2BGR)
 
@@ -277,10 +286,10 @@ class Camera:
         if not ok:
             raise ValueError("{} encode error".format(ext))
 
+        # Save image
         img_path = dir_path + "capture-" + datetime.now().isoformat() + ext
-
-        with open(img_path, "w") as f:
-            f.write(encoded.tobytes())
+        with open(img_path, "wb") as f:
+            f.write(encoded)
 
         return img_path
 
