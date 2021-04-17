@@ -83,6 +83,15 @@ capture_frame_8b:
   wbc r31, VSYNC_BIT
   wbs r31, VSYNC_BIT
 
+  ; there are 964 valid lines, but we only need 960. Likewise, when 
+  ; auto-exposure is enabled, the first 2 and last 2 lines have image
+  ; statistics and register data. Thus, skip the first 2 lines by waiting
+  ; 2 HSYNC cycles
+  wbc r31, HSYNC_BIT
+  wbs r31, HSYNC_BIT
+  wbc r31, HSYNC_BIT
+  wbs r31, HSYNC_BIT
+
 ; LINE_RESTART is where we branch back to on every subsequent line capture. It
 ; comes after VSYNC is asserted but before HSYNC is asserted
 LINE_RESTART:
