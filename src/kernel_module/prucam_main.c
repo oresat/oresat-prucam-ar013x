@@ -22,7 +22,7 @@
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Oliver Rew");
 MODULE_DESCRIPTION("Interface to a PRU and a camera");
-MODULE_VERSION("0.3.1");
+MODULE_VERSION("0.3.2");
 
 
 #define DEVICE_NAME     "prucam"    // The device will appear at /dev/prucam 
