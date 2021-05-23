@@ -6,8 +6,32 @@
 #include <pru_ctrl.h>
 
 #define SHARED_RAM 0x00010000 //offset of PRU shared mem
-#define ROWS 960  //rows per image
-#define COLS 1280 //pixels per row
+#define ROWS 1024  //rows per image
+#define COLS (2*1280) // 2 * pixels per row because 2 bytes per pixel
+
+// CFC Defs
+//
+// FS1 = 0x3FFF
+#define FS1_1 0x7F
+#define FS1_2 0x7F
+
+// FS2 = 0x3FFE
+#define FS2_1 0x7F
+#define FS2_2 0x7E
+
+// LS = 0x3FFD
+#define LS_1 0x7F
+#define LS_2 0x7D
+
+// in order to continuously search for the LS symbol, we need to search for it
+// in both little-endian and big-endian formats in the destination register
+#define LS_BE 0x7F7D
+#define LS_LE 0x7D7F
+
+#define DEBUG1 0x80 // PRU0_7
+#define DEBUG2 0x4000 // PRU0_14
+#define DEBUG3 0x8000 // PRU0_15
+
 
 // R31 image sync signal bit definitions
 #define CLK_BIT 16

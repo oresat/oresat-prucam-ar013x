@@ -14,22 +14,15 @@
 #include <linux/uaccess.h>
 #include <linux/completion.h>
 
-#include "ar0130_ctrl_regs.h"
-#include "ar0134_ctrl_regs.h"
-#include "ar013x_regs.h"
-#include "ar013x_sysfs.h"
-#include "cam_gpio.h"
-#include "cam_i2c.h"
-
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Oliver Rew");
 MODULE_AUTHOR("Ryan Medick");
 MODULE_DESCRIPTION("AM335x PRU Camera Interface Driver");
 MODULE_VERSION("1.0.0");
 
-#define ROWS           960
-#define COLS           1280
-#define PIXELS         (ROWS * COLS)
+#define ROWS           1024
+#define COLS           1280 * 2 // 2 bytes / pixel
+#define FRAME_BYTES    (ROWS * COLS)
 #define PRU0_FW_NAME   "prucam_pru0_fw.out"
 #define PRU1_FW_NAME   "prucam_pru1_fw.out"
 
@@ -114,7 +107,7 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len,
     printk(KERN_INFO "prucam: image captured\n");
 
     /* copy the image to the caller */
-    ret = copy_to_user(buffer, (char*)frame_buffer_va, PIXELS);
+    ret = copy_to_user(buffer, (char*)frame_buffer_va, FRAME_BYTES);
     if (ret) {
         printk(KERN_ERR "prucam: copy to user failed\n");
         mutex_unlock(&mutex);
@@ -123,7 +116,7 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len,
 
     mutex_unlock(&mutex);
 
-    return PIXELS;
+    return FRAME_BYTES;
 }
 
 static irqreturn_t pru_irq_handler(int irq_num, void *dev_id)
@@ -150,9 +143,7 @@ static int prucam_probe(struct platform_device *pdev)
 {
     struct device *dev;
     struct device_node *node = pdev->dev.of_node;
-    camera_regs_t *startup_regs = NULL;
     int ret, irq;
-    u16 cam_ver;
 
     if (!node)
         return -ENODEV; /* No support for non-DT platforms */
@@ -251,7 +242,7 @@ static int prucam_probe(struct platform_device *pdev)
     }
 
     /* Allocate a physically contiguous frame buffer */
-    frame_buffer_va = dma_alloc_coherent(dev, PIXELS, &frame_buffer_pa, GFP_KERNEL);
+    frame_buffer_va = dma_alloc_coherent(dev, FRAME_BYTES, &frame_buffer_pa, GFP_KERNEL);
     if (!frame_buffer_va) {
         dev_err(dev, "Failed to allocate DMA\n");
         ret = -1;
@@ -272,77 +263,11 @@ static int prucam_probe(struct platform_device *pdev)
      */
     writel((int)frame_buffer_pa, shared_mem.va);
 
-    ret = init_cam_i2c();
-    if (ret < 0) {
-        dev_err(dev, "Init camera i2c failed: %d.\n", ret);
-        goto error_i2c;
-    }
-
-    /* Init the camera control GPIO */
-    ret = init_cam_gpio();
-    if (ret < 0) {
-        dev_err(dev, "Init camera gpio failed: %d.\n", ret);
-        goto error_gpio;
-    }
-
-    /* enable the camera via gpio */
-    camera_enable();
-
-    /* Detect image sensor model */
-    ret = read_cam_reg(AR013X_AD_CHIP_VERSION_REG, &cam_ver);
-    if (ret < 0) {
-        dev_err(dev, "Read camera version over i2c failed\n");
-        goto error_i2c_rw;
-    }
-
-    if (cam_ver == 0x2402) {
-        printk(KERN_INFO "prucam: AR0130 detected");
-        startup_regs = ar0130_startup_regs;
-    } else if (cam_ver == 0x2406) {
-        printk(KERN_INFO "prucam: AR0134 detected");
-        startup_regs = ar0134_startup_regs;
-    } else {
-        dev_err(dev, "Uknown camera value: 0x%x", cam_ver);
-        goto error_i2c_rw;
-    }
-
-    /* Init camera regs via I2C */
-    ret = init_camera_regs(startup_regs);
-    if (ret < 0) {
-        dev_err(dev, "init regs using i2c failed\n");
-        goto error_i2c_rw;
-    }
-
-    /* Add sysfs control interface */
-    ret = sysfs_create_groups(&dev->kobj, ar013x_groups);
-    if (ret) {
-        dev_err(dev, "Registration failed.\n");
-        goto error_sysfs;
-    }
-
-    /* add misc device for file ops */
-    miscdev.fops = &prucam_fops;
-    miscdev.minor = MISC_DYNAMIC_MINOR;
-    miscdev.mode = S_IRUGO;
-    miscdev.name = "prucam";
-    ret = misc_register(&miscdev);
-    if (ret)
-        goto error_misc;
-
     mutex_init(&mutex);
 
     printk("prucam probe complete");
     return 0;
 
-error_misc:
-    sysfs_remove_groups(&dev->kobj, ar013x_groups);
-error_sysfs:
-error_i2c_rw:
-    free_cam_gpio();
-error_gpio:
-    end_cam_i2c();
-error_i2c:
-    dma_free_coherent(dev, PIXELS, frame_buffer_va, frame_buffer_pa);
 error_dma_alloc:
 error_dma_set:
     rproc_shutdown(pru0);
@@ -369,17 +294,7 @@ static int prucam_remove(struct platform_device *pdev)
 {
     struct device *dev = &pdev->dev;
     
-    misc_deregister(&miscdev);
-
-    /* Remove the sysfs attr */
-    sysfs_remove_groups(&dev->kobj, ar013x_groups);
-
-    /* Put camera GPIO in good state and free the lines */
-    free_cam_gpio();
-
-    end_cam_i2c();
-
-    dma_free_coherent(dev, PIXELS, frame_buffer_va, frame_buffer_pa);
+    dma_free_coherent(dev, FRAME_BYTES, frame_buffer_va, frame_buffer_pa);
 
     /* Free the shared mem region and pruss */
     pruss_release_mem_region(pruss, &shared_mem);
@@ -388,7 +303,6 @@ static int prucam_remove(struct platform_device *pdev)
     /* Stop PRUs */
     rproc_shutdown(pru0);
     rproc_shutdown(pru1);
-
 
     free_irqs();
 
