@@ -187,9 +187,7 @@ int pru_remove(struct platform_device* dev) {
  * @return returns 0 if successful
  */
 static int __init prucam_init(void) {
-    camera_regs_t *startupRegs = NULL;
-    uint16_t cam_ver = 0;
-    int regDrvr, r;
+    int regDrvr;
 
     printk(KERN_INFO "prucam: Initializing the prucam v1\n");
 
@@ -234,38 +232,8 @@ static int __init prucam_init(void) {
     regDrvr = platform_driver_register(&prudrvr);
     printk(KERN_INFO "prucam: platform driver register returned: %d\n", regDrvr);
 
-    if((r = init_cam_i2c(ar013x_i2c_info)) < 0)
-        printk("i2c init failed\n");
-
-    // init the camera control GPIO
-    if((r = init_cam_gpio())) 
-        return r;
-
-    camera_enable();
-
     // AR0130 datasheet says sleep for a little bit after enabled vregs and clock
     msleep(10);
-
-    // detect camera
-    if((r = read_cam_reg(AR013X_AD_CHIP_VERSION_REG, &cam_ver)) < 0)
-        printk("i2c read camera version failed\n");
-
-    if(cam_ver == 0x2402) {
-        printk(KERN_INFO "AR0130 detected");
-        startupRegs = ar0130_startupRegs;
-    }
-    else if(cam_ver == 0x2406) {
-        printk(KERN_INFO "AR0134 detected");
-        startupRegs = ar0134_startupRegs;
-    }
-    else {
-        printk(KERN_ERR "Uknown camera value: 0x%x", cam_ver);
-    }
-
-    // init camera i2c regs
-    r = init_camera_regs(startupRegs);
-    if(r < 0)
-        printk(KERN_ERR "init regs using i2c failed\n");
 
     printk(KERN_INFO "Init Complete\n");
     return 0;
@@ -273,21 +241,12 @@ static int __init prucam_init(void) {
 
 
 static void __exit prucam_exit(void) {
-    int r;
-
     //unregister platform driver
     platform_driver_unregister(&prudrvr);
 
     device_destroy(prucamClass, MKDEV(majorNumber, 0));     // remove the device
     class_destroy(prucamClass);                             // remove the device class
     unregister_chrdev(majorNumber, DEVICE_NAME);            // unregister the major number
-
-    r = end_cam_i2c();
-    if(r<0)
-        printk("i2c end failed\n");
-
-    // put camera GPIO in good state and free the lines
-    free_cam_gpio();
 
     printk(KERN_INFO "prucam: module exit\n");
 }

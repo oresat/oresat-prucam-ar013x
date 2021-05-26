@@ -10,6 +10,17 @@
 #define ROWS 960  //rows per image
 #define COLS 1280 //pixels per row
 
+// CFC Defs
+//
+// FS1 = 0x3FFF
+#define FS1_1 0x7F
+#define FS1_2 0x7F
+
+// FS2 = 0x3FFE
+#define FS2_1 0x7F
+#define FS2_2 0x7E
+
+
 // R31 image sync signal bit definitions
 #define CLK_BIT 16
 #define CLK_MASK 1U<<CLK_BIT

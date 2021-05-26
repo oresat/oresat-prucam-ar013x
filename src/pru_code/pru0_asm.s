@@ -65,12 +65,40 @@ __timing_routine .macro
 	.global capture_frame_8b
 capture_frame_8b:
   ; wait for signal from PRU1 to start frane capture
-  wbs r31, PRU1_TO_PRU0_R31_BIT
+  ;wbs r31, PRU1_TO_PRU0_R31_BIT
 
   ; clear the system event interrupt in INTC SICR register. Here we use the
   ; constants tables to address the register for efficiency
-  ldi r16, PRU1_TO_PRU0_EVENT
-  sbco &r16, INTC_CO_TABLE_ENTRY, SICR_REG_OFFSET, 4
+  ;ldi r16, PRU1_TO_PRU0_EVENT
+  ;sbco &r16, INTC_CO_TABLE_ENTRY, SICR_REG_OFFSET, 4
+
+  ;ldi r30, 0xffff
+  ;ldi r30, 0x0000
+
+FOREVER:
+  __timing_routine
+  and r22.b0, r31.b0, 0x7F
+  QBNE FOREVER, r22.b0, FS1_1
+  
+  __timing_routine
+  and r22.b0, r31.b0, 0x7F
+  QBNE FOREVER, r22.b0, FS1_2
+
+  __timing_routine
+  and r22.b0, r31.b0, 0x7F
+  QBNE FOREVER, r22.b0, FS2_1
+  __timing_routine
+  and r22.b0, r31.b0, 0x7F
+  QBNE FOREVER, r22.b0, FS2_2
+
+
+  ldi r30, 0xffff
+  ldi r30, 0x0000
+
+
+  jmp FOREVER
+  
+  
   
   ; r16.w0 holds the number of lines left in the image(rows) and r16.w2 holds
   ; the number of pixels left in the image line(columns). Here we preload them 
@@ -79,29 +107,10 @@ capture_frame_8b:
   ; standalone counters.
   ldi r16.w0, ROWS
 
-  ; wait for VSYNC to go high
-  wbc r31, VSYNC_BIT
-  wbs r31, VSYNC_BIT
-
-  ; there are 964 valid lines, but we only need 960. Likewise, when 
-  ; auto-exposure is enabled, the first 2 and last 2 lines have image
-  ; statistics and register data. Thus, skip the first 2 lines by waiting
-  ; 2 HSYNC cycles
-  wbc r31, HSYNC_BIT
-  wbs r31, HSYNC_BIT
-  wbc r31, HSYNC_BIT
-  wbs r31, HSYNC_BIT
-
 ; LINE_RESTART is where we branch back to on every subsequent line capture. It
 ; comes after VSYNC is asserted but before HSYNC is asserted
 LINE_RESTART:
   ldi r16.w2, COLS ; reload number of pixels in row
-
-  ; wait for HSYNC to go high
-  wbc r31, HSYNC_BIT
-  wbs r31, HSYNC_BIT
-
-  ; TODO should we wait for horizontal blanking here 
 
   ; now we start the tranfer to r22-r29 for a total of 32 bytes. Each capture
   ; is 1 byte and consists of the timing routine, 1 cycle to read in the byte 
