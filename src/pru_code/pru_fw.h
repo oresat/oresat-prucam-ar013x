@@ -24,8 +24,10 @@
 #define LS_1 0x7F
 #define LS_2 0x7D
 
-#define LS 0x7F7D
-#define REVERSE_LS 0x7D7F
+// in order to continuously search for the LS symbol, we need to search for it
+// in both little-endian and big-endian formats in the destination register
+#define LS_BE 0x7F7D
+#define LS_LE 0x7D7F
 
 #define DEBUG1 0x80 // PRU0_7
 #define DEBUG2 0x4000 // PRU0_14

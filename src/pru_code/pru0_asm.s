@@ -45,26 +45,46 @@ FOREVER:
   wbs r31, CLK_BIT
   and r22.b0, r31.b0, 0x7F
   qba FIRST_READ_LINE
-  
+ 
+  ; save the LS symbol in a register in big and little endian formats so
+  ; we can use them to compare later
+  ; TODO is it ok to use REG21? 
+  ldi r21.w0, LS_LE
+  ldi r21.w2, LS_BE
 
 LINE_RESTART:
-
-  ; wait for the LS_1 symbol
-  wbs r31, CLK_BIT
-FIND_LS1_NO_CLK:
-  and r22.b0, r31.b0, 0x7F
-  QBNE LINE_RESTART, r22.b0, LS_1
-
-  ; wait for the LS_2 symbol. If what we read is the LS_1 symbol, branch back
-  ; to FIND_LS2 so we don't miss it. If we don't find the LS_2 symbol, branch 
-  ; back to looking for LS_1. NOTE: we skip 'wbs r31, CLK_BIT' in this case
-  ; because we do not have time to execute another instruction to wait for the
-  ; clock. This is OK because we are going back to the beginning where we
-FIND_LS2:
+  
+  ; wait for LS1 ; TODO I can replace this I think
   wbs r31, CLK_BIT
   and r22.b0, r31.b0, 0x7F
-  QBEQ FIND_LS2, r22.b0, LS_1
-  QBNE FIND_LS1_NO_CLK, r22.b0, LS_2
+  qbne LINE_RESTART, r22.b0, LS_1
+
+SEARCH:
+  ; search for little endian
+  wbs r31, CLK_BIT
+  and r22.b1, r31.b0, 0x7F
+  qbeq READ_LINE, r22.w0, r21.w0
+
+  wbs r31, CLK_BIT
+  and r22.b2, r31.b0, 0x7F
+  qbeq READ_LINE, r22.w1, r21.w0
+
+  wbs r31, CLK_BIT
+  and r22.b3, r31.b0, 0x7F
+  qbeq READ_LINE, r22.w2, r21.w0
+
+  ; search for big endian
+  wbs r31, CLK_BIT
+  and r22.b2, r31.b0, 0x7F
+  qbeq READ_LINE, r22.w2, r21.w2
+
+  wbs r31, CLK_BIT
+  and r22.b1, r31.b0, 0x7F
+  qbeq READ_LINE, r22.w1, r21.w2
+
+  wbs r31, CLK_BIT
+  and r22.b0, r31.b0, 0x7F
+  qbne SEARCH, r22.w0, r21.w2
 
 READ_LINE:
 ; TODO MUST immediately read here without waiting for clock
