@@ -16,6 +16,13 @@ capture_frame_8b:
 
   ldi r30, 0x0000
 
+  ; save the LS symbol in a register in big and little endian formats so
+  ; we can use them to compare later
+  ; TODO is it ok to use REG21? 
+  ldi r21.w0, LS_LE
+  ldi r21.w2, LS_BE
+
+
   ; r16.w0 holds the number of lines left in the image(rows) and r16.w2 holds
   ; the number of pixels left in the image line(columns). Here we preload them 
   ; so they can be decremented later. Each use 2 bytes from R16 because rows 
@@ -46,12 +53,6 @@ FOREVER:
   and r22.b0, r31.b0, 0x7F
   qba FIRST_READ_LINE
  
-  ; save the LS symbol in a register in big and little endian formats so
-  ; we can use them to compare later
-  ; TODO is it ok to use REG21? 
-  ldi r21.w0, LS_LE
-  ldi r21.w2, LS_BE
-
 LINE_RESTART:
   
   ; wait for LS1 ; TODO I can replace this I think
@@ -60,6 +61,15 @@ LINE_RESTART:
   qbne LINE_RESTART, r22.b0, LS_1
 
 SEARCH:
+  ; here we search for the LS 0x7F, 0x7D pattern. We continually read in bytes,
+  ; checking after every read if the past 2 bytes match the pattern. In order
+  ; to do this in a loop we first read in B0, B1, B2, and B3 of reg 22,
+  ; checking B0-B1, B1-B2, and B2-B3, for the little-endian representation of
+  ; LS. Then we read in B2, B1, and B0 and check B3-B2, B2-B1, and B1-B0 for
+  ; the big-endian representation of LS. Then we repeat. This way, we can 
+  ; constantly look for the symbol in the stream while maintaining a read every
+  ; 3 cycles.
+
   ; search for little endian
   wbs r31, CLK_BIT
   and r22.b1, r31.b0, 0x7F
@@ -81,13 +91,14 @@ SEARCH:
   wbs r31, CLK_BIT
   and r22.b1, r31.b0, 0x7F
   qbeq READ_LINE, r22.w1, r21.w2
-
+  
+  ; look for big-endian LS in B1-B0, and if not found, repeat, otherwise fall
+  ; through to start the line read
   wbs r31, CLK_BIT
   and r22.b0, r31.b0, 0x7F
   qbne SEARCH, r22.w0, r21.w2
 
 READ_LINE:
-; TODO MUST immediately read here without waiting for clock
 
   ; now we start the tranfer to r22-r29 for a total of 32 bytes. Each capture
   ; is 1 byte and consists of the timing routine, 1 cycle to read in the byte 
@@ -96,6 +107,7 @@ READ_LINE:
   ; maintenance. The timing routine is defined at compile time and consists of
   ; different instructions based on the SPEED symbol
   
+  wbs r31, CLK_BIT
   mov r22.b0, r31.b0
   ldi r30, DEBUG2
 
