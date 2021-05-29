@@ -13,9 +13,9 @@ reg_wr = 0x40
 cws0 = 0x04
 cws1 = 0x05
 
-# width = 1310 = 0x51E
+# width = 1400 = 0x578
 #
-spi.writebytes([cws0 | reg_wr, 0x1E ])
+spi.writebytes([cws0 | reg_wr, 0x78 ])
 spi.writebytes([cws1 | reg_wr, 0x05 ])
 
 # read CWS0

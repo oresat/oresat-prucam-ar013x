@@ -8,9 +8,7 @@
 
 #define SHARED_RAM 0x00010000 //offset of PRU shared mem
 #define ROWS 1024  //rows per image
-#define COLS 1280 //pixels per row
-
-#define ROWS_MINUS_ONE (ROWS - 1)
+#define COLS (2*1280) // 2 * pixels per row because 2 bytes per pixel
 
 // CFC Defs
 //

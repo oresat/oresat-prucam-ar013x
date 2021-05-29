@@ -8,8 +8,8 @@
 #include <sys/time.h>
 #include "qdbmp.h"
 
-#define ROWS 960
-#define COLS 1280
+#define ROWS 1024
+#define COLS 1280 * 2
 #define PIXELS ROWS * COLS
 
 int main(){
