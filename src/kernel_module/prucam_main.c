@@ -27,7 +27,7 @@ MODULE_VERSION("0.3.2");
 
 #define DEVICE_NAME     "prucam"    // The device will appear at /dev/prucam 
 #define CLASS_NAME      "pru"       // The device class -- this is a character device driver
-#define ROWS            960
+#define ROWS            1024
 #define COLS            1280
 #define PIXELS          (ROWS * COLS)
 #define PRUBASE         0x4a300000

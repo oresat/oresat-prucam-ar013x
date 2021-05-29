@@ -74,38 +74,87 @@ capture_frame_8b:
 
   ;ldi r30, 0xffff
   ;ldi r30, 0x0000
+  ldi r30, 0x0000
 
 FOREVER:
   __timing_routine
-  and r22.b0, r31.b0, 0x7F
-  QBNE FOREVER, r22.b0, FS1_1
+  QBNE FOREVER, r31.b0, FS1_1
+  nop
   
   __timing_routine
-  and r22.b0, r31.b0, 0x7F
-  QBNE FOREVER, r22.b0, FS1_2
+  QBNE FOREVER, r31.b0, FS1_2
+  nop
 
   __timing_routine
-  and r22.b0, r31.b0, 0x7F
-  QBNE FOREVER, r22.b0, FS2_1
+  QBNE FOREVER, r31.b0, FS2_1
+  nop
+
   __timing_routine
-  and r22.b0, r31.b0, 0x7F
-  QBNE FOREVER, r22.b0, FS2_2
+  QBNE FOREVER, r31.b0, FS2_2
+  nop
 
 
-  ldi r30, 0xffff
   ldi r30, 0x0000
+  ldi r30, DEBUG1
+  ldi r30, DEBUG1
+  ldi r30, DEBUG1
+  ldi r30, 0x0000
+  ldi r30, 0x0000
+  ldi r30, 0x0000
+
+  ;jmp FOREVER
+
+  ; r16.w0 holds the number of lines left in the image(rows) and r16.w2 holds
+  ; the number of pixels left in the image line(columns). Here we preload them 
+  ; so they can be decremented later. Each use 2 bytes from R16 because rows 
+  ; and columns are both <65536. A larger capture in the future might need
+  ; standalone counters. We start one less that the number of rows because
+  ; FRAME_START preceeds the first row
+  ldi r16.w0, ROWS_MINUS_ONE
+
+LINERESTART:
+
+
+  ; wait the the LS_1 symbol
+  __timing_routine
+FIND_LS1_NO_CLK:
+  and r22.b0, r31.b0, 0x7F
+  QBNE LINERESTART, r22.b0, LS_1
+
+  ; wait for the LS_2 symbol. If what we read is the LS_1 symbol, branch back
+  ; to FIND_LS2 so we don't miss it. If we don't find the LS_2 symbol, branch 
+  ; back to looking for LS_1. NOTE: we skip '__timing_routine' in this case
+  ; because we do not have time to execute another instruction to wait for the
+  ; clock. This is OK because we are going back to the beginning where we
+FIND_LS2:
+  __timing_routine
+  and r22.b0, r31.b0, 0x7F
+  QBEQ FIND_LS2, r22.b0, LS_1
+  QBNE FIND_LS1_NO_CLK, r22.b0, LS_2
+
+; TODO MUST immediately read here without waiting for clock
+
+  
+  ldi r30, DEBUG2
+  ldi r30, DEBUG2
+  ldi r30, DEBUG2
+  ldi r30, 0x0000
+  ldi r30, 0x0000
+  ldi r30, 0x0000
+
+
+  ; decrement the row counter and restart the line capture if there are lines
+  ; left in the image. Since we finished the line, we no longer need to
+  ; precisely time and interleave instructions because there is slack time
+  ; between lines
+  sub r16.w0, r16.w0, 1
+  qblt LINERESTART, r16.w0, 0
 
 
   jmp FOREVER
   
   
   
-  ; r16.w0 holds the number of lines left in the image(rows) and r16.w2 holds
-  ; the number of pixels left in the image line(columns). Here we preload them 
-  ; so they can be decremented later. Each use 2 bytes from R16 because rows 
-  ; and columns are both <65536. A larger capture in the future might need
-  ; standalone counters.
-  ldi r16.w0, ROWS
 
 ; LINE_RESTART is where we branch back to on every subsequent line capture. It
 ; comes after VSYNC is asserted but before HSYNC is asserted
