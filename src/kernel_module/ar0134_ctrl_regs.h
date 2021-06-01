@@ -6,7 +6,7 @@
  */
 
 #ifndef AR0134_CTRL_REGS_H
-#define AR0134_CTRL_REGS_H 
+#define AR0134_CTRL_REGS_H
 
 #include "ar013x_regs.h"
 #include "cam_i2c.h"
@@ -23,18 +23,19 @@ struct i2c_board_info ar0134_i2c_info __initdata = {
 /** @brief startup registers for AR0134 CMOS Digital Image Sensor */
 camera_regs_t ar0134_startupRegs[] = {
     {AR013X_AD_RESET_REGISTER, 0x0001},
-    {0x0000, 0x0064}, // delay
-    {AR013X_AD_RESET_REGISTER, 0x10D8}, //Disable Serial, Enable Parallel, Drive Outputs(no hi-z), lock reg
+    {0x0000, 0x0064},                   // delay
+    {AR013X_AD_RESET_REGISTER, 0x10D8}, // Disable Serial, Enable Parallel,
+                                        // Drive Outputs(no hi-z), lock reg
 
     // from "Column Correction ReTriggering" settings in AR013XREV1.ini
     {AR013X_AD_RESET_REGISTER, 0x10D8}, // disable streaming
     {AR013X_AD_COLUMN_CORRECTION, 0x6007},
-    {0x0000, 200}, // delay
+    {0x0000, 200},                      // delay
     {AR013X_AD_RESET_REGISTER, 0x10DC}, // enable streaming
-    {0x0000, 200}, // delay
+    {0x0000, 200},                      // delay
     {AR013X_AD_RESET_REGISTER, 0x10D8}, // disable streaming
     {AR013X_AD_COLUMN_CORRECTION, 0xE007},
-    {0x0000, 200},// delay
+    {0x0000, 200},                      // delay
     {AR013X_AD_RESET_REGISTER, 0x10DC}, // enable streaming
 
     {AR013X_AD_ROW_SPEED, 0x0010},
@@ -75,10 +76,10 @@ camera_regs_t ar0134_startupRegs[] = {
     {AR013X_AD_LINE_LENGTH_PCK, 0x0672},
 
     // context A
-    {AR013X_AD_Y_ADDR_START, 0x0000}, // y start = 0 
+    {AR013X_AD_Y_ADDR_START, 0x0000}, // y start = 0
     {AR013X_AD_X_ADDR_START, 0x0000}, // x start = 0
-    {AR013X_AD_Y_ADDR_END, 0x03BF}, // y end = 959
-    {AR013X_AD_X_ADDR_END, 0x04FF}, // x end = 1279
+    {AR013X_AD_Y_ADDR_END, 0x03BF},   // y end = 959
+    {AR013X_AD_X_ADDR_END, 0x04FF},   // x end = 1279
     {AR013X_AD_FRAME_LEN_LINES, 0x03DE},
     {AR013X_AD_COARSE_INTEGRATION_TIME, 0x0180},
     {AR013X_AD_FINE_INTERGRATION_TIME, 0x00C0},
@@ -100,11 +101,14 @@ camera_regs_t ar0134_startupRegs[] = {
     {AR013X_AD_DIGITAL_TEST, 0x1300},
     {0x0000, 0x0064}, // delay
     {AR013X_AD_AE_CTRL_REG, 0x0000},
-    {AR013X_AD_EMBEDDED_DATA_CTRL, 0x1982}, // enable embedded data, this is needed for auto exposure
+    {AR013X_AD_EMBEDDED_DATA_CTRL,
+     0x1982}, // enable embedded data, this is needed for auto exposure
     {AR013X_AD_TEST_PATTERN_MODE, 0x0000},
 
     // power up sequence 9 - enable streaming
-    {AR013X_AD_RESET_REGISTER, 0x10DC},  //Ensable Serial, Enable Parallel, Drive Outputs(no hi-z), lock reg, streaming mode(not low power)
+    {AR013X_AD_RESET_REGISTER,
+     0x10DC}, // Ensable Serial, Enable Parallel, Drive Outputs(no hi-z), lock
+              // reg, streaming mode(not low power)
     {0x0000, 0x0064}, // delay
     {0x0000, 0x0000}, // Zeros mark end of sequence
 };

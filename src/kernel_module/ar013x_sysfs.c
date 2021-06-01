@@ -9,29 +9,31 @@
 #include "cam_i2c.h"
 #include <linux/sysfs.h>
 
-#define CONTEXT_A       0
-#define CONTEXT_B       1
+#define CONTEXT_A 0
+#define CONTEXT_B 1
 
 /** @brief Local flag for the current context */
 static int context = CONTEXT_A;
 
-/** 
+/**
  * @brief Gets the correct context register based
  * @param reg The register #define for Context A
  * @return The register #define for the current context
  * */
-#define CONTEXT_REG(reg) (context == CONTEXT_A ? reg : reg ## _CB)
+#define CONTEXT_REG(reg) (context == CONTEXT_A ? reg : reg##_CB)
 
-ssize_t ar013x_img_size_show(struct device *dev, struct device_attribute *attr, char *buf) {
+ssize_t ar013x_img_size_show(struct device *dev, struct device_attribute *attr,
+                             char *buf)
+{
     uint16_t start_value = 0, end_value = 0, start_reg, end_reg;
     int len = 0, r;
 
     if (strcmp(attr->attr.name, "x_size") == 0) {
         start_reg = CONTEXT_REG(AR013X_AD_X_ADDR_START);
-        end_reg = CONTEXT_REG(AR013X_AD_X_ADDR_END);
+        end_reg   = CONTEXT_REG(AR013X_AD_X_ADDR_END);
     } else if (strcmp(attr->attr.name, "y_size") == 0) {
         start_reg = CONTEXT_REG(AR013X_AD_Y_ADDR_START);
-        end_reg = CONTEXT_REG(AR013X_AD_Y_ADDR_END);
+        end_reg   = CONTEXT_REG(AR013X_AD_Y_ADDR_END);
     } else {
         dev_err(dev, "prucam: unknown show name %s", attr->attr.name);
         return len;
@@ -52,25 +54,29 @@ ssize_t ar013x_img_size_show(struct device *dev, struct device_attribute *attr, 
     return len;
 }
 
-ssize_t ar013x_img_size_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count) {
+ssize_t ar013x_img_size_store(struct device *dev, struct device_attribute *attr,
+                              const char *buf, size_t count)
+{
     uint16_t start_value, value, start_reg, end_reg, end_reg_max;
     int temp, r;
 
     if ((r = kstrtoint(buf, 10, &temp)) < 0) {
-        dev_err(dev, "prucam: %s store value was not a interger", attr->attr.name);
+        dev_err(dev, "prucam: %s store value was not a interger",
+                attr->attr.name);
         return r;
     }
 
     value = (uint16_t)temp;
 
     if (strcmp(attr->attr.name, "x_size") == 0) {
-        dev_err(dev, "prucam: %s store value was not a interger", attr->attr.name);
-        start_reg = CONTEXT_REG(AR013X_AD_X_ADDR_START);
-        end_reg = CONTEXT_REG(AR013X_AD_X_ADDR_END);
+        dev_err(dev, "prucam: %s store value was not a interger",
+                attr->attr.name);
+        start_reg   = CONTEXT_REG(AR013X_AD_X_ADDR_START);
+        end_reg     = CONTEXT_REG(AR013X_AD_X_ADDR_END);
         end_reg_max = 0x07FF;
     } else if (strcmp(attr->attr.name, "y_size") == 0) {
-        start_reg = CONTEXT_REG(AR013X_AD_Y_ADDR_START);
-        end_reg = CONTEXT_REG(AR013X_AD_Y_ADDR_END);
+        start_reg   = CONTEXT_REG(AR013X_AD_Y_ADDR_START);
+        end_reg     = CONTEXT_REG(AR013X_AD_Y_ADDR_END);
         end_reg_max = 0x03FF;
     } else {
         dev_err(dev, "prucam: unknown store name %s", attr->attr.name);
@@ -88,7 +94,7 @@ ssize_t ar013x_img_size_store(struct device *dev, struct device_attribute *attr,
         dev_err(dev, "prucam: %s value is too big", attr->attr.name);
         return -EINVAL;
     }
-    
+
     r = write_cam_reg(end_reg, value);
     if (r != 0)
         return r;
@@ -96,9 +102,11 @@ ssize_t ar013x_img_size_store(struct device *dev, struct device_attribute *attr,
     return count;
 }
 
-ssize_t ar013x_color_gain_show(struct device *dev, struct device_attribute *attr, char *buf) {
+ssize_t ar013x_color_gain_show(struct device *dev,
+                               struct device_attribute *attr, char *buf)
+{
     uint16_t value = 0, reg;
-    int len = 0, r;
+    int len        = 0, r;
 
     if (strcmp(attr->attr.name, "green1_gain") == 0) {
         reg = CONTEXT_REG(AR013X_AD_GREEN1_GAIN);
@@ -128,12 +136,16 @@ ssize_t ar013x_color_gain_show(struct device *dev, struct device_attribute *attr
     return len;
 }
 
-ssize_t ar013x_color_gain_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count) {
+ssize_t ar013x_color_gain_store(struct device *dev,
+                                struct device_attribute *attr, const char *buf,
+                                size_t count)
+{
     uint16_t value, reg;
     int temp, r;
 
     if ((r = kstrtoint(buf, 10, &temp)) < 0) {
-        dev_err(dev, "prucam: %s store value was not a interger", attr->attr.name);
+        dev_err(dev, "prucam: %s store value was not a interger",
+                attr->attr.name);
         return r;
     }
 
@@ -158,7 +170,7 @@ ssize_t ar013x_color_gain_store(struct device *dev, struct device_attribute *att
         dev_err(dev, "prucam: %s value is too big", attr->attr.name);
         return -EINVAL;
     }
-    
+
     r = write_cam_reg(reg, value);
     if (r != 0)
         return r;
@@ -166,9 +178,11 @@ ssize_t ar013x_color_gain_store(struct device *dev, struct device_attribute *att
     return count;
 }
 
-ssize_t ar013x_y_odd_show(struct device *dev, struct device_attribute *attr, char *buf) {
+ssize_t ar013x_y_odd_show(struct device *dev, struct device_attribute *attr,
+                          char *buf)
+{
     uint16_t value = 0, reg;
-    int len = 0, r;
+    int len        = 0, r;
 
     reg = CONTEXT_REG(AR013X_AD_Y_ODD_INC);
 
@@ -185,12 +199,15 @@ ssize_t ar013x_y_odd_show(struct device *dev, struct device_attribute *attr, cha
     return len;
 }
 
-ssize_t ar013x_y_odd_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count) {
+ssize_t ar013x_y_odd_store(struct device *dev, struct device_attribute *attr,
+                           const char *buf, size_t count)
+{
     uint16_t value, reg;
     int temp, r;
 
     if ((r = kstrtoint(buf, 10, &temp)) < 0) {
-        dev_err(dev, "prucam: %s store value was not a interger", attr->attr.name);
+        dev_err(dev, "prucam: %s store value was not a interger",
+                attr->attr.name);
         return r;
     }
 
@@ -210,9 +227,11 @@ ssize_t ar013x_y_odd_store(struct device *dev, struct device_attribute *attr, co
     return count;
 }
 
-ssize_t ar013x_digital_test_show(struct device *dev, struct device_attribute *attr, char *buf) {
+ssize_t ar013x_digital_test_show(struct device *dev,
+                                 struct device_attribute *attr, char *buf)
+{
     uint16_t value = 0;
-    int len = 0, r;
+    int len        = 0, r;
 
     r = read_cam_reg(AR013X_AD_DIGITAL_TEST, &value);
     if (r != 0)
@@ -226,7 +245,7 @@ ssize_t ar013x_digital_test_show(struct device *dev, struct device_attribute *at
         // Context A is bits [5:4] & Context B is bits [9:8]
         value >>= context == CONTEXT_A ? 4 : 8;
         value &= 0x0003;
-    } 
+    }
 
     len = sprintf(buf, "%d\n", value);
     if (len <= 0)
@@ -235,12 +254,16 @@ ssize_t ar013x_digital_test_show(struct device *dev, struct device_attribute *at
     return len;
 }
 
-ssize_t ar013x_digital_test_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count) {
+ssize_t ar013x_digital_test_store(struct device *dev,
+                                  struct device_attribute *attr,
+                                  const char *buf, size_t count)
+{
     uint16_t input_value, reg_value;
     int temp, r;
 
     if ((r = kstrtoint(buf, 10, &temp)) < 0) {
-        dev_err(dev, "prucam: %s store value was not a interger", attr->attr.name);
+        dev_err(dev, "prucam: %s store value was not a interger",
+                attr->attr.name);
         return r;
     }
 
@@ -249,10 +272,11 @@ ssize_t ar013x_digital_test_store(struct device *dev, struct device_attribute *a
     r = read_cam_reg(AR013X_AD_DIGITAL_TEST, &reg_value);
     if (r != 0)
         return r;
-    
+
     if (strcmp(attr->attr.name, "context") == 0) {
         if (input_value != 0 && input_value != 1) { // 1 bit
-            dev_err(dev, "prucam: %s attr must be 0 or 1 not %d", attr->attr.name, input_value);
+            dev_err(dev, "prucam: %s attr must be 0 or 1 not %d",
+                    attr->attr.name, input_value);
             return -EINVAL;
         }
 
@@ -275,8 +299,8 @@ ssize_t ar013x_digital_test_store(struct device *dev, struct device_attribute *a
             input_value &= 0x0300;
             reg_value &= 0xFCFF;
         }
-    } 
-    
+    }
+
     reg_value |= input_value;
 
     r = write_cam_reg(AR013X_AD_DIGITAL_TEST, reg_value);
@@ -286,16 +310,18 @@ ssize_t ar013x_digital_test_store(struct device *dev, struct device_attribute *a
     return count;
 }
 
-ssize_t ar013x_digital_binning_show(struct device *dev, struct device_attribute *attr, char *buf) {
+ssize_t ar013x_digital_binning_show(struct device *dev,
+                                    struct device_attribute *attr, char *buf)
+{
     uint16_t value = 0;
-    int len = 0, r;
+    int len        = 0, r;
 
     r = read_cam_reg(AR013X_AD_DIGITAL_BINNING, &value);
     if (r != 0)
         return r;
 
     // 2 bits, Context A is [1:0] & Context B is [5:4]
-    if (context == CONTEXT_B) 
+    if (context == CONTEXT_B)
         value >>= 4;
 
     value &= 0x0003;
@@ -307,12 +333,16 @@ ssize_t ar013x_digital_binning_show(struct device *dev, struct device_attribute 
     return len;
 }
 
-ssize_t ar013x_digital_binning_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count) {
+ssize_t ar013x_digital_binning_store(struct device *dev,
+                                     struct device_attribute *attr,
+                                     const char *buf, size_t count)
+{
     uint16_t input_value, reg_value;
     int temp, r;
 
     if ((r = kstrtoint(buf, 10, &temp)) < 0) {
-        dev_err(dev, "prucam: %s store value was not a interger", attr->attr.name);
+        dev_err(dev, "prucam: %s store value was not a interger",
+                attr->attr.name);
         return r;
     }
 
@@ -330,7 +360,7 @@ ssize_t ar013x_digital_binning_store(struct device *dev, struct device_attribute
     // 2 bits, Context A is [1:0] & Context B is [5:4]
     if (context == CONTEXT_A) {
         input_value &= 0x0003;
-        reg_value  &= 0xFFFC;
+        reg_value &= 0xFFFC;
     } else {
         input_value <<= 4;
         input_value &= 0x0030;
@@ -338,7 +368,7 @@ ssize_t ar013x_digital_binning_store(struct device *dev, struct device_attribute
     }
 
     reg_value |= input_value;
-    
+
     r = write_cam_reg(AR013X_AD_DIGITAL_BINNING, reg_value);
     if (r != 0)
         return r;
@@ -346,7 +376,9 @@ ssize_t ar013x_digital_binning_store(struct device *dev, struct device_attribute
     return count;
 }
 
-ssize_t ar013x_general_show(struct device *dev, struct device_attribute *attr, char *buf) {
+ssize_t ar013x_general_show(struct device *dev, struct device_attribute *attr,
+                            char *buf)
+{
     uint16_t value = 0, reg = 0;
     int len = 0, r;
 
@@ -370,12 +402,15 @@ ssize_t ar013x_general_show(struct device *dev, struct device_attribute *attr, c
     return len;
 }
 
-ssize_t ar013x_general_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count) {
+ssize_t ar013x_general_store(struct device *dev, struct device_attribute *attr,
+                             const char *buf, size_t count)
+{
     uint16_t value, reg = 0;
     int temp, r;
 
     if ((r = kstrtoint(buf, 10, &temp)) < 0) {
-        dev_err(dev, "prucam: %s store value was not a interger", attr->attr.name);
+        dev_err(dev, "prucam: %s store value was not a interger",
+                attr->attr.name);
         return r;
     }
 
@@ -400,16 +435,18 @@ ssize_t ar013x_general_store(struct device *dev, struct device_attribute *attr, 
 // ---------------------------------------------------------------------------
 // Auto exposure
 
-ssize_t ar013x_auto_exposure_show(struct device *dev, struct device_attribute *attr, char *buf) {
+ssize_t ar013x_auto_exposure_show(struct device *dev,
+                                  struct device_attribute *attr, char *buf)
+{
     uint16_t value = 0;
-    int len = 0, r;
+    int len        = 0, r;
 
     r = read_cam_reg(AR013X_AD_AE_CTRL_REG, &value);
     if (r != 0)
         return r;
 
     if (strcmp(attr->attr.name, "min_analog_gain") == 0) { // bits [6:5]
-        value >>= 5; 
+        value >>= 5;
         value &= 0x3;
     } else if (strcmp(attr->attr.name, "auto_dg_en") == 0) { // bit [4]
         value >>= 4;
@@ -417,7 +454,7 @@ ssize_t ar013x_auto_exposure_show(struct device *dev, struct device_attribute *a
     } else if (strcmp(attr->attr.name, "auto_gd_en") == 0) { // bit [1]
         value >>= 1;
         value &= 0x1;
-    } else if (strcmp(attr->attr.name, "ae_enable") == 0) {// bit [0]
+    } else if (strcmp(attr->attr.name, "ae_enable") == 0) { // bit [0]
         value &= 0x1;
     }
 
@@ -428,12 +465,16 @@ ssize_t ar013x_auto_exposure_show(struct device *dev, struct device_attribute *a
     return len;
 }
 
-ssize_t ar013x_auto_exposure_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count) {
+ssize_t ar013x_auto_exposure_store(struct device *dev,
+                                   struct device_attribute *attr,
+                                   const char *buf, size_t count)
+{
     uint16_t input_value, reg_value;
     int temp, r, size = 0;
 
     if ((r = kstrtoint(buf, 10, &temp)) < 0) {
-        dev_err(dev, "prucam: %s store value was not a interger", attr->attr.name);
+        dev_err(dev, "prucam: %s store value was not a interger",
+                attr->attr.name);
         return r;
     }
 
@@ -445,7 +486,7 @@ ssize_t ar013x_auto_exposure_store(struct device *dev, struct device_attribute *
     else
         size = 0x1; // everthing else is 1 bit
 
-    if (input_value > size) { 
+    if (input_value > size) {
         dev_err(dev, "prucam: %s must be <= %d", attr->attr.name, size);
         return -EINVAL;
     }
@@ -466,12 +507,12 @@ ssize_t ar013x_auto_exposure_store(struct device *dev, struct device_attribute *
         input_value <<= 1;
         input_value &= 0x0002;
         reg_value &= 0xFFFD;
-    } else if (strcmp(attr->attr.name, "ae_enable") == 0) {// bit [0]
+    } else if (strcmp(attr->attr.name, "ae_enable") == 0) { // bit [0]
         input_value &= 0x0001;
         reg_value &= 0xFFFE;
 
         // disable digital binning
-        if((r = write_cam_reg(AR013X_AD_DIGITAL_BINNING, 0)) != 0)
+        if ((r = write_cam_reg(AR013X_AD_DIGITAL_BINNING, 0)) != 0)
             return r;
     }
 
@@ -484,7 +525,9 @@ ssize_t ar013x_auto_exposure_store(struct device *dev, struct device_attribute *
     return count;
 }
 
-ssize_t ar013x_ae_general_show(struct device *dev, struct device_attribute *attr, char *buf) {
+ssize_t ar013x_ae_general_show(struct device *dev,
+                               struct device_attribute *attr, char *buf)
+{
     uint16_t value = 0, reg = 0;
     int len = 0, r;
 
@@ -532,12 +575,16 @@ ssize_t ar013x_ae_general_show(struct device *dev, struct device_attribute *attr
     return len;
 }
 
-ssize_t ar013x_ae_general_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count) {
+ssize_t ar013x_ae_general_store(struct device *dev,
+                                struct device_attribute *attr, const char *buf,
+                                size_t count)
+{
     uint16_t input_value, reg = 0;
     int r, temp;
 
     if ((r = kstrtoint(buf, 10, &temp)) < 0) {
-        dev_err(dev, "prucam: %s store value was not a interger", attr->attr.name);
+        dev_err(dev, "prucam: %s store value was not a interger",
+                attr->attr.name);
         return r;
     }
 

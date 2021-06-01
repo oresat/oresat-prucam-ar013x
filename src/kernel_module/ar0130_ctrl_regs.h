@@ -6,7 +6,7 @@
  */
 
 #ifndef AR0130_CTRL_REGS_H
-#define AR0130_CTRL_REGS_H 
+#define AR0130_CTRL_REGS_H
 
 #include "ar013x_regs.h"
 #include "cam_i2c.h"
@@ -23,8 +23,9 @@ struct i2c_board_info ar013x_i2c_info __initdata = {
 /** @brief startup registers for AR0130 CMOS Digital Image Sensor */
 camera_regs_t ar0130_startupRegs[] = {
     {AR013X_AD_RESET_REGISTER, 0x0001},
-    {0x0000, 0x0064}, // delay
-    {AR013X_AD_RESET_REGISTER, 0x10D8}, //Disable Serial, Enable Parallel, Drive Outputs(no hi-z), lock reg
+    {0x0000, 0x0064},                   // delay
+    {AR013X_AD_RESET_REGISTER, 0x10D8}, // Disable Serial, Enable Parallel,
+                                        // Drive Outputs(no hi-z), lock reg
 
     // from AR0130REV1.ini in ON Semi software suite,
     // "[AR0130 Rev1 DCDS sequencer load 5-07-2013 300 pixclks]"
@@ -120,17 +121,17 @@ camera_regs_t ar0130_startupRegs[] = {
     {AR013X_AD_SEQ_DATA_PORT, 0x502C},
     {AR013X_AD_SEQ_DATA_PORT, 0x2C2C},
     // black magic registers
-    {0x309E, 0x0000}, //RESERVED // DCDS_PROG_START_ADDR
-    {0x30E4, 0x6372}, //RESERVED // ADC_BITS_6_7
-    {0x30E2, 0x7253}, //RESERVED // ADC_BITS_4_5
-    {0x30E0, 0x5470}, //RESERVED // ADC_BITS_2_3
-    {0x30E6, 0xC4CC}, //RESERVED // ADC_CONFIG1
-    {0x30e8, 0x8050}, //RESERVED // ADC_CONFIG2
+    {0x309E, 0x0000}, // RESERVED // DCDS_PROG_START_ADDR
+    {0x30E4, 0x6372}, // RESERVED // ADC_BITS_6_7
+    {0x30E2, 0x7253}, // RESERVED // ADC_BITS_4_5
+    {0x30E0, 0x5470}, // RESERVED // ADC_BITS_2_3
+    {0x30E6, 0xC4CC}, // RESERVED // ADC_CONFIG1
+    {0x30e8, 0x8050}, // RESERVED // ADC_CONFIG2
 
     {0x0000, 200}, // delay 200 ms
 
     // TODO not sure what this is for, look into that
-    {AR013X_AD_OPERATION_MODE_CTRL, 0x0029}, //OP MODE CTL
+    {AR013X_AD_OPERATION_MODE_CTRL, 0x0029}, // OP MODE CTL
 
     // from AR0130REV1.ini in ON Semi software suite,
     // "[AR0130 Rev1 Optimized settings DCDS 5-7-2013]"
@@ -150,14 +151,15 @@ camera_regs_t ar0130_startupRegs[] = {
     {AR013X_AD_DIGITAL_CTRL, 0x0018},
     {AR013X_AD_COLUMN_CORRECTION, 0xE007},
 
-    // TODO pick up here, ini file line 449, looks like there is some reset stuff
-    
+    // TODO pick up here, ini file line 449, looks like there is some reset
+    // stuff
+
     {AR013X_AD_COARSE_INTEGRATION_TIME, 0x00c0},
     {AR013X_AD_DIGITAL_BINNING, 0x0000},
     {AR013X_AD_Y_ADDR_START, 0x0000}, // y start = 0
     {AR013X_AD_X_ADDR_START, 0x0000}, // x start = 0
-    {AR013X_AD_Y_ADDR_END, 0x03BF}, // y end = 959
-    {AR013X_AD_X_ADDR_END, 0x04FF}, // x end = 1279
+    {AR013X_AD_Y_ADDR_END, 0x03BF},   // y end = 959
+    {AR013X_AD_X_ADDR_END, 0x04FF},   // x end = 1279
     {AR013X_AD_FRAME_LEN_LINES, 0x03DE},
 
     {AR013X_AD_LINE_LENGTH_PCK, 0x0672},
@@ -176,11 +178,14 @@ camera_regs_t ar0130_startupRegs[] = {
     {AR013X_AD_DIGITAL_TEST, 0x1300},
     {0x0000, 0x0064}, // delay 100 ms
     {AR013X_AD_AE_CTRL_REG, 0x0000},
-    {AR013X_AD_EMBEDDED_DATA_CTRL, 0x1982}, // enable embedded data, this is needed for auto exposure
+    {AR013X_AD_EMBEDDED_DATA_CTRL,
+     0x1982}, // enable embedded data, this is needed for auto exposure
     {AR013X_AD_TEST_PATTERN_MODE, 0x0000},
 
     // power up sequence 9 - enable streaming
-    {AR013X_AD_RESET_REGISTER, 0x10DC},  // disable Serial, Enable Parallel, Drive Outputs(no hi-z), lock reg, streaming mode(not low power)
+    {AR013X_AD_RESET_REGISTER,
+     0x10DC}, // disable Serial, Enable Parallel, Drive Outputs(no hi-z), lock
+              // reg, streaming mode(not low power)
     {0x0000, 0x0064}, // delay 100 ms
     {0x0000, 0x0000}, // Zeros mark end of sequence
 };
