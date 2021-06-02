@@ -25,8 +25,37 @@ fio.readinto(imgbuf)
 out = open('img.buf', 'wb')
 out.write(imgbuf)
 
+# create an empty array of uint16 large enough to fit the image
+img = np.zeros(rows * cols, np.uint16)
+
+arr = []
+
+for i in range(0, len(imgbuf), 2):
+    # the PIRT1280 pixels are 14 bits, split along 2 bytes, 7 bits each. The
+    # MSB comes first (big-endian), so take the high order byte, shift it one 
+    # bit to the right, and then OR it with the low order byte
+    idx = i>>1
+    result = np.uint16((imgbuf[i] << 7) | imgbuf[i+1])
+    #np.insert(img, idx, result)
+    arr.append(result)
+
+    if i % 100000 == 0:
+        print("progress: ", i)
+
+    #print("BYTE[{}]: {}".format(i, hex(imgbuf[i])))
+    #print("BYTE[{}]: {}".format(i+1, hex(imgbuf[i+1])))
+    #print("RES: ", result, type(result))
+
+
+img = np.array(arr)
+
+out = open('imgconv.buf', 'wb')
+out.write(img.tobytes())
+
+
 # read image bytes into ndarray
-img = np.frombuffer(imgbuf, dtype=np.uint16).reshape(rows, cols)
+#img = np.frombuffer(imgbuf, dtype=dt).reshape(rows, cols)
+img = img.reshape(rows, cols)
 
 # do bayer color conversion. For monochrome/raw image, comment out
 #img = cv2.cvtColor(img, cv2.COLOR_BayerBG2BGR)

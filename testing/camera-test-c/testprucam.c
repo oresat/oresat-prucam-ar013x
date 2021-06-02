@@ -9,8 +9,8 @@
 #include "qdbmp.h"
 
 #define ROWS 1024
-#define COLS 1280 * 2
-#define PIXELS ROWS * COLS
+#define COLS 1280 
+#define BYTES ROWS * COLS * 2 // 2 bytes per pixel
 
 int main(){
   int ret, fd;
@@ -25,12 +25,12 @@ int main(){
     return errno;
   }
 
-  char buf[PIXELS];
+  char buf[BYTES];
 
   gettimeofday(&before , NULL);
 
   printf("Reading from the device...\n");
-  ret = read(fd, buf, PIXELS);        // Read the response from the LKM
+  ret = read(fd, buf, BYTES);        // Read the response from the LKM
   if (ret < 0){
     perror("Failed to read the message from the device.");
     return errno;
@@ -46,7 +46,7 @@ int main(){
   printf("Elapsed time: %ld uSec\n", uSecs);
 
   BMP* bmp;
-  bmp = BMP_Create(COLS, ROWS, 8);
+  bmp = BMP_Create(COLS, ROWS, 16);
 
   //we have to create an 8 bit color palette in the BMP library
   for (int i=0; i<256; i++)
@@ -55,7 +55,7 @@ int main(){
   //write buffer to image
   for(int i = 0 ; i < ROWS ; i++) 
     for(int j = 0 ; j < COLS ; j++) 
-      BMP_SetPixelIndex(bmp, j, i, buf[(i*COLS) + j]);
+      BMP_SetPixelIndex(bmp, j, i, buf[(i*COLS)*2 + j]);
 
   //save image
   char name[20];

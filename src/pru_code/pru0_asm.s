@@ -131,38 +131,49 @@ CHUNK_RESTART:
   mov r22.b3, r31.b0
   nop
 
+  ; TESTING start pixel 2(out of 0) of chunk
   ; save to reg 23
   wbs r31, CLK_BIT
   mov r23.b0, r31.b0
+  ;ldi r23.b0, 0x31
   nop
 
   wbs r31, CLK_BIT
   mov r23.b1, r31.b0
+  ;ldi r23.b1, 0x32
   nop
 
   wbs r31, CLK_BIT
   mov r23.b2, r31.b0
+  ;ldi r23.b2, 0x33
   ldi r30, 0x0000 ; de-assert debug lines
 
   wbs r31, CLK_BIT
   mov r23.b3, r31.b0
+  ;ldi r23.b3, 0x34
   nop
 
+  ; start pixel 4 of chunk
   ; save to reg 24
   wbs r31, CLK_BIT
   mov r24.b0, r31.b0
+  ;ldi r24.b0, 0x26
   nop
 
   wbs r31, CLK_BIT
   mov r24.b1, r31.b0
+  ;ldi r24.b1, 0x36
   nop
 
+  ; start pixel 5 of chunk
   wbs r31, CLK_BIT
   mov r24.b2, r31.b0
+  ;ldi r24.b2, 0x25
   nop
 
   wbs r31, CLK_BIT
   mov r24.b3, r31.b0
+  ;ldi r24.b3, 0x35
   nop
 
   ; save to reg 25

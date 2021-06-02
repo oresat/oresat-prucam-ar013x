@@ -19,7 +19,7 @@ reg_wr = 0x40
 
 spi.writebytes([ft0 | reg_wr, 0x41])
 spi.writebytes([ft1 | reg_wr, 0x83])
-spi.writebytes([ft2 | reg_wr, 0x0d])
+spi.writebytes([ft2 | reg_wr, 0x1d])
 spi.writebytes([ft3 | reg_wr, 0x0])
 
 # wait a sec for it to apply

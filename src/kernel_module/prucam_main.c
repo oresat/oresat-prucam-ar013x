@@ -28,8 +28,8 @@ MODULE_VERSION("0.3.2");
 #define DEVICE_NAME     "prucam"    // The device will appear at /dev/prucam 
 #define CLASS_NAME      "pru"       // The device class -- this is a character device driver
 #define ROWS            1024
-#define COLS            1280
-#define PIXELS          (ROWS * COLS)
+#define COLS            1280 * 2 // 2 bytes / pixel
+#define FRAME_BYTES          (ROWS * COLS)
 #define PRUBASE         0x4a300000
 #define PRUSHAREDRAM    (PRUBASE + 0x10000)
 #define PRUINTC_OFFSET  0x20000
@@ -152,7 +152,7 @@ int pru_probe(struct platform_device* dev) {
      * I am unsure what the ideal flags for this are, but GFP_KERNEL seems to
      * work
      */
-    cpu_addr = dma_alloc_coherent(prucamDevice, PIXELS, &dma_handle, GFP_KERNEL);
+    cpu_addr = dma_alloc_coherent(prucamDevice, FRAME_BYTES, &dma_handle, GFP_KERNEL);
     if(cpu_addr == NULL) {
         printk(KERN_INFO "Failed to allocate memory\n");
         return -1;
@@ -172,8 +172,8 @@ int pru_remove(struct platform_device* dev) {
     // free irqs alloc'd in the probe
     free_irqs();
 
-    dma_free_coherent(prucamDevice, PIXELS, cpu_addr, dma_handle);
-    printk(KERN_INFO "prucam: Freed %d bytes\n", PIXELS); 
+    dma_free_coherent(prucamDevice, FRAME_BYTES, cpu_addr, dma_handle);
+    printk(KERN_INFO "prucam: Freed %d bytes\n", FRAME_BYTES); 
 
     return 0;
 }
@@ -336,7 +336,7 @@ static ssize_t dev_read(
 
     physBase = (char*)cpu_addr;
 
-    err = copy_to_user(buffer, physBase, PIXELS); //TODO use __copy_to_user
+    err = copy_to_user(buffer, physBase, FRAME_BYTES); //TODO use __copy_to_user
     if(err != 0) {
         mutex_unlock(&cam_mtx);
         return -EFAULT;
