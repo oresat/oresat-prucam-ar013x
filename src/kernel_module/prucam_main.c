@@ -318,15 +318,14 @@ static int pru_handshake(int physAddr)
 
     // ioremap physical locations in the PRU shared ram
     void __iomem *pru_shared_ram;
-    pru_shared_ram = ioremap_nocache((int)PRUSHAREDRAM, 4);
+    pru_shared_ram = ioremap((int)PRUSHAREDRAM, 4);
 
     // write physical address to PRU shared RAM where a PRU can find it
     writel(physAddr, pru_shared_ram);
 
     // ioremap PRU SRSR0 reg
     void __iomem *pru_srsr0;
-    pru_srsr0
-        = ioremap_nocache((int)(PRUBASE + PRUINTC_OFFSET + SRSR0_OFFSET), 4);
+    pru_srsr0 = ioremap((int)(PRUBASE + PRUINTC_OFFSET + SRSR0_OFFSET), 4);
 
     // set bit 24 in PRU SRSR0 to trigger event 24
     writel(0x1000000, pru_srsr0);

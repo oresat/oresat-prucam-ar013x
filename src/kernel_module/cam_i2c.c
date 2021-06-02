@@ -3,6 +3,7 @@
 #include <linux/i2c.h>
 #include <linux/module.h>
 #include <linux/moduleparam.h>
+#include <linux/version.h>
 
 /** The i2c adapter */
 struct i2c_adapter *i2c_adap;
@@ -15,7 +16,12 @@ int init_cam_i2c(struct i2c_board_info i2c_info)
 
     i2c_adap = i2c_get_adapter(2);
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5,2,6)
     client = i2c_new_device(i2c_adap, &i2c_info);
+#else
+    client = i2c_new_client_device(i2c_adap, &i2c_info);
+#endif
+
     if (client == NULL) {
         printk(KERN_ERR "i2c register failed\n");
         ret = -ENXIO;
