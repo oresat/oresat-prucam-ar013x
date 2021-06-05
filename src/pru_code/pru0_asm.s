@@ -32,26 +32,21 @@ capture_frame_8b:
   ldi r16.w0, ROWS
   ldi r16.w2, COLS ; reload number of pixels in row ; TODO need to interleave this
 
-FOREVER:
+FIND_FS:
   wbs r31, CLK_BIT
-  QBNE FOREVER, r31.b0, FS1_1
-  nop
+  QBNE FIND_FS, r31.b0, FS1_1
+  ldi r30, 0x0000
   
   wbs r31, CLK_BIT
-  QBNE FOREVER, r31.b0, FS1_2
+  QBNE FIND_FS, r31.b0, FS1_2
 
   wbs r31, CLK_BIT
-  QBNE FOREVER, r31.b0, FS2_1
-  nop
+  QBNE FIND_FS, r31.b0, FS2_1
+  ldi r30, DEBUG1 ; set DEBUG1 even though we haven't quite found FS2 yet
 
   wbs r31, CLK_BIT
-  QBNE FOREVER, r31.b0, FS2_2
-  ldi r30, DEBUG1
-  
-  ; since we dont have time to branch, read the first chunk here
-  wbs r31, CLK_BIT
-  and r22.b0, r31.b0, 0x7F
-  qba FIRST_READ_LINE
+  QBNE FIND_FS, r31.b0, FS2_2
+  qba READ_LINE
  
 LINE_RESTART:
   
@@ -100,167 +95,173 @@ SEARCH:
 
 READ_LINE:
 
+  ; TODO IGNORE 8 cols 
+  ; TODO set ROFF register to 8 to start at row 8
+  ; TODO I might be able to turn down CWS or use defauth of 1279
+
   ; now we start the tranfer to r22-r29 for a total of 32 bytes. Each capture
   ; is 1 byte and consists of the timing routine, 1 cycle to read in the byte 
   ; from r31 i.e. pixel value, and 1 cycle for either a nop or a control 
   ; instruction like xin/xout transfer, triggering an interrupt, or loop 
-  ; maintenance. The timing routine is defined at compile time and consists of
-  ; different instructions based on the SPEED symbol
+  ; maintenance. 
+  ;
+  ; Pixel values are 14 bits, 7 bits per capture, with the MSB coming first.
+  ; However, it makes the user's job easier if we capture the data as little
+  ; endian. So, the first byte of every pixel gets shifted left 7 bits and 
+  ; stores into w0(bits 0-15) of the destination register. The second byte of 
+  ; the pixel gets OR'd with the existing value of b0(bits 0-7) of the
+  ; destination register. This way, the LSb of the first captured byte is the
+  ; MSb of the LSB of final value. This same routine happens with the next 2
+  ; captured bytes, but is put into the higher 2 bytes of the register
+  ; TODO example??
   
+  ; shift first byte of pixel 7 bits to the left and save it to word0 of
+  ; register r22
   wbs r31, CLK_BIT
-  mov r22.b0, r31.b0
+  lsl r22.w0, r31.b0, 7
   ldi r30, DEBUG2
 
-FIRST_READ_LINE:
-
+  ; or the second byte of the pixel with the value of r22.b0, which should be
+  ; all zeros except possibly bit 7, which could have been written above
   wbs r31, CLK_BIT
-  mov r22.b1, r31.b0
+  or r22.b0, r22.b0, r31.b0
   nop
 
   wbs r31, CLK_BIT
-  mov r22.b2, r31.b0
+  lsl r22.w2, r31.b0, 7
   ldi r30, 0x0000 ; de-assert debug lines
 
-  ;jmp FOREVER
 ; we start the loop a couple operations after the beginning as these first
 ; couple bytes are recorded at the end so their NOP can be interleaved with
 ; other instructions that must run at the end 
 CHUNK_RESTART:
 
   wbs r31, CLK_BIT
-  mov r22.b3, r31.b0
+  or r22.b2, r22.b2, r31.b0
   nop
 
-  ; TESTING start pixel 2(out of 0) of chunk
+  ; start pixel 2(out of 0) of chunk
   ; save to reg 23
   wbs r31, CLK_BIT
-  mov r23.b0, r31.b0
-  ;ldi r23.b0, 0x31
+  lsl r23.w0, r31.b0, 7
   nop
 
   wbs r31, CLK_BIT
-  mov r23.b1, r31.b0
-  ;ldi r23.b1, 0x32
+  or r23.b0, r23.b0, r31.b0
   nop
 
   wbs r31, CLK_BIT
-  mov r23.b2, r31.b0
-  ;ldi r23.b2, 0x33
+  lsl r23.w2, r31.b0, 7
   ldi r30, 0x0000 ; de-assert debug lines
 
   wbs r31, CLK_BIT
-  mov r23.b3, r31.b0
-  ;ldi r23.b3, 0x34
+  or r23.b2, r23.b2, r31.b0
   nop
 
   ; start pixel 4 of chunk
   ; save to reg 24
   wbs r31, CLK_BIT
-  mov r24.b0, r31.b0
-  ;ldi r24.b0, 0x26
+  lsl r24.w0, r31.b0, 7
   nop
 
   wbs r31, CLK_BIT
-  mov r24.b1, r31.b0
-  ;ldi r24.b1, 0x36
+  or r24.b0, r24.b0, r31.b0
   nop
 
   ; start pixel 5 of chunk
   wbs r31, CLK_BIT
-  mov r24.b2, r31.b0
-  ;ldi r24.b2, 0x25
+  lsl r24.w2, r31.b0, 7
   nop
 
   wbs r31, CLK_BIT
-  mov r24.b3, r31.b0
-  ;ldi r24.b3, 0x35
+  or r24.b2, r24.b2, r31.b0
   nop
 
   ; save to reg 25
   wbs r31, CLK_BIT
-  mov r25.b0, r31.b0
+  lsl r25.w0, r31.b0, 7
   nop
 
   wbs r31, CLK_BIT
-  mov r25.b1, r31.b0
+  or r25.b0, r25.b0, r31.b0
   nop
 
   wbs r31, CLK_BIT
-  mov r25.b2, r31.b0
+  lsl r25.w2, r31.b0, 7
   nop
 
   wbs r31, CLK_BIT
-  mov r25.b3, r31.b0
+  or r25.b2, r25.b2, r31.b0
   nop
 
   ; save to reg 26
   wbs r31, CLK_BIT
-  mov r26.b0, r31.b0
+  lsl r26.w0, r31.b0, 7
   nop
 
   wbs r31, CLK_BIT
-  mov r26.b1, r31.b0
+  or r26.b0, r26.b0, r31.b0
   nop
 
   wbs r31, CLK_BIT
-  mov r26.b2, r31.b0
+  lsl r26.w2, r31.b0, 7
   nop
 
   wbs r31, CLK_BIT
-  mov r26.b3, r31.b0
+  or r26.b2, r26.b2, r31.b0
   nop
 
   ; save to reg 27
   wbs r31, CLK_BIT
-  mov r27.b0, r31.b0
+  lsl r27.w0, r31.b0, 7
   nop
 
   wbs r31, CLK_BIT
-  mov r27.b1, r31.b0
+  or r27.b0, r27.b0, r31.b0
   nop
 
   wbs r31, CLK_BIT
-  mov r27.b2, r31.b0
+  lsl r27.w2, r31.b0, 7
   nop
 
   wbs r31, CLK_BIT
-  mov r27.b3, r31.b0
+  or r27.b2, r27.b2, r31.b0
   nop
 
   ; save to reg 28
   wbs r31, CLK_BIT
-  mov r28.b0, r31.b0
+  lsl r28.w0, r31.b0, 7
   nop
 
   wbs r31, CLK_BIT
-  mov r28.b1, r31.b0
+  or r28.b0, r28.b0, r31.b0
   nop
 
   wbs r31, CLK_BIT
-  mov r28.b2, r31.b0
+  lsl r28.w2, r31.b0, 7
   nop
 
   wbs r31, CLK_BIT
-  mov r28.b3, r31.b0
+  or r28.b2, r28.b2, r31.b0
   nop
 
   ; save to reg 29
   wbs r31, CLK_BIT
-  mov r29.b0, r31.b0
+  lsl r29.w0, r31.b0, 7
   nop
 
   wbs r31, CLK_BIT
-  mov r29.b1, r31.b0
+  or r29.b0, r29.b0, r31.b0
   nop
 
-
+  ; save to reg 29
   wbs r31, CLK_BIT
-  mov r29.b2, r31.b0
+  lsl r29.w2, r31.b0, 7
   ; decrement our pixel counter by the number of pixels we have copied
   sub r16.w2, r16.w2, CHUNK_SIZE
 
   wbs r31, CLK_BIT
-  mov r29.b3, r31.b0
+  or r29.b2, r29.b2, r31.b0
   ; swap registers r22-r29 i.e. 32 bytes to scratchpad from where the other PRU
   ; can copy them to RAM.
   xout SCRATCHPAD_BANK_0, &r22, CHUNK_SIZE 
@@ -273,20 +274,18 @@ CHUNK_RESTART:
   ; maintenance instructions and branch back to the beginning of the chunk
   ; transfer minus the couple r22 bytes we read below
 
-  ; save to reg 22 byte 0
+  ; save first pixel of next chunk to reg 22 
   wbs r31, CLK_BIT
-  mov r22.b0, r31.b0
+  lsl r22.w0, r31.b0, 7
   ; signal the other PRU to start the transfer
   ldi r31, SYS_EVT_17_TRIGGER
 
-  ; save to reg 22 byte 1
   wbs r31, CLK_BIT
-  mov r22.b1, r31.b0
+  or r22.b0, r22.b0, r31.b0
   nop
 
-  ; save to reg 22 byte 2
   wbs r31, CLK_BIT
-  mov r22.b2, r31.b0
+  lsl r22.w2, r31.b0, 7
   ; if we still have pixels left to read, branch back to CHUNK_RESTART
   qblt CHUNK_RESTART, r16.w2, 0
 
