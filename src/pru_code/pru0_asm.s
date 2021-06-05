@@ -95,10 +95,6 @@ SEARCH:
 
 READ_LINE:
 
-  ; TODO IGNORE 8 cols 
-  ; TODO set ROFF register to 8 to start at row 8
-  ; TODO I might be able to turn down CWS or use defauth of 1279
-
   ; now we start the tranfer to r22-r29 for a total of 32 bytes. Each capture
   ; is 1 byte and consists of the timing routine, 1 cycle to read in the byte 
   ; from r31 i.e. pixel value, and 1 cycle for either a nop or a control 

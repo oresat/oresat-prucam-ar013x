@@ -9,10 +9,10 @@ log = logging.getLogger()
 log.setLevel(logging.INFO)
 
 arg = argparse.ArgumentParser()
-arg.add_argument('--enable', action='store_true')
-arg.add_argument('--disable', action='store_true')
-arg.add_argument('-v', action='store_true')
-arg.add_argument('--integration', action='store', type=float)
+arg.add_argument('--enable', action='store_true', help="enable the sensor")
+arg.add_argument('--disable', action='store_true', help="disable the sensor")
+arg.add_argument('-v', action='store_true', help="enable debug logging")
+arg.add_argument('--integration', action='store', type=float, help="set integration time in seconds")
 
 args = arg.parse_args()
 
@@ -56,13 +56,11 @@ pix_clks_per_refclk = 4 # 4 64MHz clocks per 16MHZ refclk
 
 # calculate the readout time
 readout_refclks = (((default_cws + dummy_pixels + sync_pixels) * bytes_per_pixel) * rows) / pix_clks_per_refclk
-
 readout_margin = 1.1 # scalar to increase readout time for safety
 
 class pirt1280:
 
     def __init__(self):
-
         # init SPI
         self.spi = spidev.SpiDev()
         self.spi.open(1, 1) # /dev/spidev1.1
@@ -76,6 +74,9 @@ class pirt1280:
         gpio.set(sensor_enable_gpio, 1)
 
         time.sleep(0.25)
+
+        # TODO set ROFF register to 8 to start at row 8
+        # TODO I might be able to turn down CWS or use defauth of 1279
 
         self.set_cws(default_cws)
         self.set_single_lane()
@@ -131,7 +132,7 @@ class pirt1280:
 
         # validate the integration time
         if intr_refclks < 513:
-            log.debug("specified {} but minimum integration is 513 REFCLKs, settings to 513".format(intr_refclks))
+            log.warning("specified less that minimum integration of 513 REFCLKs, setting to 513".format(intr_refclks))
             intr_refclks = 513
 
         # calculate the number of refclks in a frame by adding the number of refclks
@@ -218,15 +219,19 @@ class pirt1280:
 def main():
     p = pirt1280()
 
+    # set debug logging
     if args.v:
         log.setLevel(logging.DEBUG)
 
+    # act on args
     if args.enable:
         p.enable()
     elif args.disable:
         p.disable()
     elif args.integration:
         p.set_integration(args.integration)
-
+    else:
+        arg.print_help()
+        
 if __name__ == "__main__":
     main()
