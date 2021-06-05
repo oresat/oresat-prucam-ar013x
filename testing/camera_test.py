@@ -22,21 +22,18 @@ imgbuf = bytearray(pixel_bytes)
 # read from prucam into buffer
 fio.readinto(imgbuf)
 
-# write buffer out to file
+# write raw buffer out to file
 out = open('img.buf', 'wb')
 out.write(imgbuf)
 
 # read image bytes into ndarray
 img = np.frombuffer(imgbuf, dtype=np.uint16).reshape(rows, cols)
 
-# do bayer color conversion. For monochrome/raw image, comment out
-#img = cv2.cvtColor(img, cv2.COLOR_BayerBG2BGR)
-
 # json encode image
-ok, img = cv2.imencode('.bmp', img, params=[cv2.CV_16U])
+ok, img = cv2.imencode('.tiff', img, params=[cv2.CV_16U])
 if not(ok):
     raise BaseException("encoding error")
 
 # write image
-with open('capt.bmp', 'wb') as f:
+with open('capt.tiff', 'wb') as f:
     f.write(img)
