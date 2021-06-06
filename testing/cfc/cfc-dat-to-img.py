@@ -10,9 +10,9 @@ cols = 1280
 rows = 1024
 pixel_bytes = cols * rows * 2
 
-path="/dev/prucam"
+# input file is first arg
+path=sys.argv[1]
 
-# open up the prucam char device
 fd = os.open(path, os.O_RDWR)
 fio = io.FileIO(fd, closefd = False)
 
@@ -21,10 +21,6 @@ imgbuf = bytearray(pixel_bytes)
 
 # read from prucam into buffer
 fio.readinto(imgbuf)
-
-# write raw buffer out to file
-out = open('img.buf', 'wb')
-out.write(imgbuf)
 
 # read image bytes into ndarray
 img = np.frombuffer(imgbuf, dtype=np.uint16).reshape(rows, cols)
@@ -36,7 +32,6 @@ img = cv2.flip(img, 0)
 ok, img = cv2.imencode('.png', img, params=[cv2.CV_16U])
 if not(ok):
     raise BaseException("encoding error")
-
 
 # write image
 with open('capt.png', 'wb') as f:

@@ -110,7 +110,7 @@ class pirt1280:
 
         # write the register
         self.spi.writebytes([cws0 | reg_wr, b[0]])
-        self.spi.writebytes([cws1 | reg_wr, b[0]])
+        self.spi.writebytes([cws1 | reg_wr, b[1]])
 
         # wait a sec for it to apply
         time.sleep(0.25)
