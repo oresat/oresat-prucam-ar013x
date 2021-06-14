@@ -34,26 +34,28 @@ capture_frame_8b:
 
 FIND_FS:
   wbs r31, CLK_BIT
-  QBNE FIND_FS, r31.b0, FS1_1
+  qbne FIND_FS, r31.b0, FS1_1
   ldi r30, 0x0000
   
   wbs r31, CLK_BIT
-  QBNE FIND_FS, r31.b0, FS1_2
+  qbne FIND_FS, r31.b0, FS1_2
+  nop
 
   wbs r31, CLK_BIT
-  QBNE FIND_FS, r31.b0, FS2_1
+  qbne FIND_FS, r31.b0, FS2_1
   ldi r30, DEBUG1 ; set DEBUG1 even though we haven't quite found FS2 yet
 
   wbs r31, CLK_BIT
-  QBNE FIND_FS, r31.b0, FS2_2
+  qbne FIND_FS, r31.b0, FS2_2
   qba READ_LINE
  
 LINE_RESTART:
   
-  ; wait for LS1 ; TODO I can replace this I think
+  ; read in the first byte to b0. Only run this on branch to LINE_RESTART 
+  ; because SEARCH below will write b0 in the last routine 
   wbs r31, CLK_BIT
   and r22.b0, r31.b0, 0x7F
-  qbne LINE_RESTART, r22.b0, LS_1
+  nop
 
 SEARCH:
   ; here we search for the LS 0x7F, 0x7D pattern. We continually read in bytes,
@@ -94,6 +96,17 @@ SEARCH:
   qbne SEARCH, r22.w0, r21.w2
 
 READ_LINE:
+
+  ; after the LS symbol, the line number is written out in 2 bytes(1 pixel).
+  ; Here we skip those 2 bytes so they don't end up in the image. HOWEVER,
+  ; removing below will encode the line number into the final image buf, which
+  ; can be very useful in debugging, so keep that in mind.
+  wbs r31, CLK_BIT
+  nop
+  nop
+  wbs r31, CLK_BIT
+  nop
+  nop
 
   ; now we start the tranfer to r22-r29 for a total of 32 bytes. Each capture
   ; is 1 byte and consists of the timing routine, 1 cycle to read in the byte 

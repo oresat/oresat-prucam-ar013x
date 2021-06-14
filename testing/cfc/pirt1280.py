@@ -21,14 +21,23 @@ log.debug("DISABLE: {}".format(args.disable))
 log.debug("VERBOSE: {}".format(args.v))
 log.debug("INTEGRATION: {}".format(args.integration))
 
+sensor_enable_gpio = 86
+
 # SPI 100KHz
 spi_hz= 100000
 
-sensor_enable_gpio = 86
-
 # register addresses
+com = 0x01
+coff0 = 0x02
+coff1 = 0x03
 cws0 = 0x04
 cws1 = 0x05
+hb0 = 0x06
+hb1 = 0x07
+roff0 = 0x08
+roff1 = 0x09
+rws0 = 0x0a
+rws1 = 0x0b
 it0 = 0x0e
 it1 = 0x0f
 it2 = 0x10
@@ -37,10 +46,20 @@ ft0 = 0x12
 ft1 = 0x13
 ft2 = 0x14
 ft3 = 0x15
+vhi = 0x1a
+vlo = 0x1c
+conf0 = 0x26
 conf1 = 0x27
+conf2 = 0x28
+conf3 = 0x29
+ncp = 0x2e
+conf4 = 0x31
 
 # OR with address to write
 reg_wr = 0x40
+
+# number of seconds to wait after writing a register before reading it back
+read_back_wait = 0.1
 
 # refclk
 refclk = 16000000 # 16MHz
@@ -73,55 +92,127 @@ class pirt1280:
         gpio.setup(sensor_enable_gpio, gpio.OUT)
         gpio.set(sensor_enable_gpio, 1)
 
-        time.sleep(0.25)
+        time.sleep(read_back_wait)
 
         # TODO set ROFF register to 8 to start at row 8
         # TODO I might be able to turn down CWS or use defauth of 1279
 
-        self.set_cws(default_cws)
+        self.set_roff(8)
+        self.set_coff(8)
+        #self.set_cws(default_cws)
+        self.set_hb(32)
         self.set_single_lane()
         self.set_integration(0.001)
 
+
+    def disable(self):
+        log.info("Disabling PIRT1280...")
+        gpio.setup(sensor_enable_gpio, gpio.OUT)
+        gpio.set(sensor_enable_gpio, 0)
+
+
     def set_single_lane(self):
         # read current CONF1 value
-        self.spi.writebytes([conf1])
-        read = self.spi.readbytes(1)
+        read = self.read_reg(conf1)
         log.debug("EXISTING CONF1: {} {}".format(hex(read[0]), read[0]))
 
         # clear bits 6 & 7 of CONF1 and write it back
         new = read[0] & 0x3F
-        self.spi.writebytes([conf1 | reg_wr, new])
+        self.set_conf1(new)
 
         # wait a sec for it to apply
-        time.sleep(0.25)
+        time.sleep(read_back_wait)
 
         # read back CONF1
-        self.spi.writebytes([conf1])
-        read = self.spi.readbytes(1)
+        read = self.read_reg(conf1)
         log.debug("NEW CONF1: {} {}".format(hex(read[0]), read[0]))
+
+    def set_com(self, val):
+        self.spi.writebytes([com | reg_wr, val])
+
+    # set_coff sets the column offset registers
+    def set_coff(self, coff):
+        self.set_16b_reg("COFF", coff, coff0, coff1)
 
 
     # set_cws sets the column window size
     def set_cws(self, cws):
-        # convert the CWS to little-endian bytes
-        b = cws.to_bytes(2, 'little')
+        self.set_16b_reg("CWS", cws, cws0, cws1)
 
-        log.debug("Set CWS {} ({}) {} {}".format(cws, hex(cws), hex(b[0]), hex(b[1])))
+
+    # set_hb sets the horizontal blanking registers
+    def set_hb(self, hb):
+        self.set_16b_reg("HB", hb, hb0, hb1)
+
+
+    # set_roff sets the row offset register
+    def set_roff(self, roff):
+        self.set_16b_reg("ROFF", roff, roff0, roff1)
+
+    
+    # set_rws sets the row window size register
+    def set_rws(self, rws):
+        self.set_16b_reg("RWS", rws, rws0, rws1)
+
+
+    # set_16b_reg writes the passed value to the passed registers as a 16 bit
+    # little-endian integer.
+    def set_16b_reg(self, name, val, reg0, reg1):
+        # convert the value to little-endian bytes
+        b = val.to_bytes(2, 'little')
+
+        log.debug("Set {} {} ({}) {} {}".format(name, val, hex(val), hex(b[0]), hex(b[1])))
 
         # write the register
-        self.spi.writebytes([cws0 | reg_wr, b[0]])
-        self.spi.writebytes([cws1 | reg_wr, b[1]])
+        self.spi.writebytes([reg0 | reg_wr, b[0]])
+        self.spi.writebytes([reg1 | reg_wr, b[1]])
 
         # wait a sec for it to apply
-        time.sleep(0.25)
+        time.sleep(read_back_wait)
 
-        # read back CWS0 and CWS1
-        self.spi.writebytes([cws0])
-        read = self.spi.readbytes(1)
-        log.debug("CWS0: {} {}".format(hex(read[0]), read[0]))
-        self.spi.writebytes([cws1])
-        read = self.spi.readbytes(1)
-        log.debug("CWS1: {} {}".format(hex(read[0]), read[0]))
+        # read back the registers
+        read = self.read_reg(reg0)
+        log.debug("{}0: {} {}".format(name, hex(read[0]), read[0]))
+        read = self.read_reg(reg1)
+        log.debug("{}1: {} {}".format(name, hex(read[0]), read[0]))
+
+
+    def set_conf0(self, val):
+        self.spi.writebytes([conf0 | reg_wr, val])
+
+
+    def set_conf1(self, val):
+        self.spi.writebytes([conf1 | reg_wr, val])
+
+
+    def set_conf2(self, val):
+        self.spi.writebytes([conf2 | reg_wr, val])
+
+
+    def set_conf3(self, val):
+        self.spi.writebytes([conf3 | reg_wr, val])
+
+
+    def set_conf4(self, val):
+        self.spi.writebytes([conf4 | reg_wr, val])
+
+
+    def set_vhi(self, val):
+        self.spi.writebytes([vhi | reg_wr, val])
+
+
+    def set_vlo(self, val):
+        self.spi.writebytes([vlo | reg_wr, val])
+
+
+    def set_ncp(self, val):
+        self.spi.writebytes([ncp | reg_wr, val])
+
+
+    # write_reg_raw allows write the raw register address(not including the 
+    # write flag) with the provided value
+    def write_reg_raw(self, reg, val):
+        self.spi.writebytes([reg, val])
 
 
     def set_integration(self, intr_seconds):
@@ -173,48 +264,32 @@ class pirt1280:
         self.spi.writebytes([it3 | reg_wr, irb[3]])
 
         # wait a sec for it to apply
-        time.sleep(0.25)
+        time.sleep(read_back_wait)
 
         # read back 
-        self.spi.writebytes([ft0])
-        read = self.spi.readbytes(1)
+        read = self.read_reg(ft0)
         log.debug("ft0: {}".format(hex(read[0]), read[0]))
-
-        self.spi.writebytes([ft1])
-        read = self.spi.readbytes(1)
+        read = self.read_reg(ft1)
         log.debug("ft1: {}".format(hex(read[0]), read[0]))
-
-        self.spi.writebytes([ft2])
-        read = self.spi.readbytes(1)
+        read = self.read_reg(ft2)
         log.debug("ft2: {}".format(hex(read[0]), read[0]))
-
-        self.spi.writebytes([ft3])
-        read = self.spi.readbytes(1)
+        read = self.read_reg(ft3)
         log.debug("ft3: {}".format(hex(read[0]), read[0]))
 
         # read back 
-        self.spi.writebytes([it0])
-        read = self.spi.readbytes(1)
+        read = self.read_reg(it0)
         log.debug("it0: {}".format(hex(read[0]), read[0]))
-
-        self.spi.writebytes([it1])
-        read = self.spi.readbytes(1)
+        read = self.read_reg(it1)
         log.debug("it1: {}".format(hex(read[0]), read[0]))
-
-        self.spi.writebytes([it2])
-        read = self.spi.readbytes(1)
+        read = self.read_reg(it2)
         log.debug("it2: {}".format(hex(read[0]), read[0]))
-
-        self.spi.writebytes([it3])
-        read = self.spi.readbytes(1)
+        read = self.read_reg(it3)
         log.debug("it3: {}".format(hex(read[0]), read[0]))
 
 
-    def disable(self):
-        log.info("Disabling PIRT1280...")
-        gpio.setup(sensor_enable_gpio, gpio.OUT)
-        gpio.set(sensor_enable_gpio, 0)
-
+    def read_reg(self, reg):
+        self.spi.writebytes([reg])
+        return self.spi.readbytes(1)
 
 def main():
     p = pirt1280()

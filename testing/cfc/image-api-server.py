@@ -10,6 +10,9 @@ import logging
 
 api = Flask(__name__)
 
+log = logging.getLogger()
+log.setLevel(logging.INFO)
+
 # constants
 cols = 1280
 rows = 1024
@@ -25,7 +28,7 @@ def get_image(filename):
 
     if "integration" in request.args:
         itg_time = request.args.get("integration")
-        logging.info("setting 'integration time to {}".format(itg_time))
+        logging.info("setting integration time to {}".format(itg_time))
 
     fd = os.open(path, os.O_RDWR)
     fio = io.FileIO(fd, closefd = False)
@@ -36,8 +39,16 @@ def get_image(filename):
     # read from prucam into buffer
     fio.readinto(imgbuf)
 
+    # write raw buffer out to file
+    out = open('img.buf', 'wb')
+    out.write(imgbuf)
+
     # read image bytes into ndarray
     img = np.frombuffer(imgbuf, dtype=np.uint16).reshape(rows, cols)
+    
+    # pixel values are only 14 bits, but opencv expects 16 bits, so shift each
+    # value 2 bits to the left
+    img = img << 2
 
     # flip the image because it is read upside down
     img = cv2.flip(img, 0)
