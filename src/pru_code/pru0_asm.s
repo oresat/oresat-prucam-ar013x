@@ -47,7 +47,7 @@ FIND_FS:
 
   wbs r31, CLK_BIT
   qbne FIND_FS, r31.b0, FS2_2
-  qba READ_LINE
+  qba READ_LINE_NO_LINE_NUMBER
  
 LINE_RESTART:
   
@@ -107,6 +107,9 @@ READ_LINE:
   wbs r31, CLK_BIT
   nop
   nop
+
+; no line number is encoded in the first line after the FS symbols, so start here
+READ_LINE_NO_LINE_NUMBER:
 
   ; now we start the tranfer to r22-r29 for a total of 32 bytes. Each capture
   ; is 1 byte and consists of the timing routine, 1 cycle to read in the byte 
