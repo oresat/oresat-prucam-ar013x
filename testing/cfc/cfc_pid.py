@@ -4,7 +4,14 @@ import math
 import time
 import gpio
 import logging
+import os
+from simple_pid import PID
+import paho.mqtt.client as paho
+import json
+from datetime import datetime 
+import threading
 
+tec_gpio = 88
 logging.getLogger().setLevel(logging.INFO)
 
 adc_path = '/sys/bus/iio/devices/iio:device0/in_voltage0_raw'
@@ -76,52 +83,77 @@ def sample():
         avg = samples_sum / samples
         return avg
 
-from simple_pid import PID
+pid = None
 
-tec_gpio = 88
+def update_pid():
+    global pid
+    with open('tec_params.json', 'r') as f:
+        b = f.read()
+        obj = json.loads(b)
 
-import paho.mqtt.client as paho
-import json
+        setpoint = obj['setpoint']
+        p = obj['p']
+        i = obj['i']
+        d = obj['d']
+
+        # if we just started, create a new pid object
+        if pid == None:
+            pid =  PID(p, i, d, setpoint=setpoint)
+
+        # set the new tunings
+        pid.tunings = (p, i, d)
+        pid.setpoint = setpoint
+
 
 def main():
 
-    setpoint = 0
-    mqtt = paho.Client()
-    mqtt.connect("192.168.1.115", 1883, 2)
+    global pid
+    mqtt_user = "ece558"
+    mqtt_pw = os.getenv("MQTT_PW")
 
-    pid = PID(15, 0.05, 0.2, setpoint=setpoint)
+
+    mqtt = paho.Client()
+    mqtt.username_pw_set(username=mqtt_user, password=mqtt_pw)
+    mqtt.connect("mqtt.oliverrew.com", 1883, 2)
+
     gpio.setup(tec_gpio, gpio.OUT)
     gpio.set(tec_gpio, 0)
     state = 0
+    start = datetime.now()
 
-    temp = sample()
-    while True:
+    event = threading.Event()
+
+    period = 0.2
+
+    while not event.wait(timeout=period):
+
+        # sample the temp and get the PID correction
+        temp = sample()
+        update_pid()
         diff = pid(temp)
-        print("Temp: ", temp, "C")
-        print("PID: ", diff)
-        print("======")
 
+        if diff < 0:
+            if state == 0:
+                print("ENABLING TEC")
+                gpio.set(tec_gpio, 1)
+                state = 1
+        else:
+            if state == 1:
+                print("DISABLING TEC")
+                gpio.set(tec_gpio, 0)
+                state = 0
+            
         msg = {
             'temp': temp,
+            'pid': diff,
+            'time': (datetime.now() - start).total_seconds(),
             'state': state,
-            'setpoint': setpoint
+            'setpoint': pid.setpoint
         }
+        b = json.dumps(msg)
+        print(b)
 
-        mqtt.publish("tecmetrics999", json.dumps(msg), qos=0)
-
-        if diff < 1:
-            print("ENABLING TEC")
-            gpio.set(tec_gpio, 1)
-            state = 1
-        else:
-            print("DISABLING TEC")
-            gpio.set(tec_gpio, 0)
-            state = 0
-            
-
-        temp = sample()
-
-        time.sleep(0.1)
+        mqtt.publish("oresat/cfc/tec", b, qos=0)
 
 if __name__ == "__main__":
     try:
