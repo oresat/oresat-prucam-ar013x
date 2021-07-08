@@ -7,6 +7,7 @@ from time import sleep
 import numpy as np
 import cv2
 import logging
+from cfc_tec import ctrl
 
 api = Flask(__name__)
 
@@ -18,6 +19,56 @@ cols = 1280
 rows = 1024
 pixel_bytes = cols * rows * 2
 path="/dev/prucam"
+
+
+@api.route("/tec/disable", methods = ['POST'])
+def tec_disable():
+    ctrl.stop()
+    return Response(status=204)
+
+@api.route("/tec/temperature", methods = ['GET'])
+def get_tec_temp():
+    temp = ctrl.get_temp()
+    return Response(response=str(temp), status=200)
+
+@api.route("/tec/temperature", methods = ['POST'])
+def set_tec_temp():
+
+    temp = request.args.get("temperature")
+    if not temp:
+        return Response(response='no temperature specified\n', status=400)
+
+    temp = int(temp)
+
+    if temp < -30 or temp > 40:
+        return Response(response='temperature must be between -30C and 40C\n', status=400)
+
+    ctrl.set_temp(temp)
+    return Response(status=204)
+
+
+@api.route("/tec/enable", methods = ['POST'])
+def tec_enable():
+    # parse the temperature from the query params
+    temp = request.args.get("temperature")
+    if not temp:
+        return Response(response='no temperature specified\n', status=400)
+
+    temp = int(temp)
+
+    if temp < -30 or temp > 40:
+        return Response(response='temperature must be between -30C and 40C\n', status=400)
+
+
+    print("TEMPERATURE: ", temp)
+    
+    try:
+        ctrl.start(20)
+    except Exception as e:
+        return Response(response='error starting TEC controller: ' + str(e), status=400)
+
+    return Response(status=204)
+
 
 @api.route("/<filename>")
 def get_image(filename):
