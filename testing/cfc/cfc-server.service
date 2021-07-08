@@ -1,0 +1,13 @@
+[Unit]
+Description=barebones service that sets up the cfc test server
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=10s
+# working directory assume oresat user and repo in home dir
+WorkingDirectory=/home/oresat/oresat-linux-prucam
+ExecStart=/home/oresat/oresat-linux-prucam/testing/cfc/launch-api-server.sh
+
+[Install]
+WantedBy=multi-user.target

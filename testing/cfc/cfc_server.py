@@ -8,6 +8,7 @@ import numpy as np
 import cv2
 import logging
 from cfc_tec import ctrl
+from pirt1280 import pirt1280
 
 api = Flask(__name__)
 
@@ -50,7 +51,7 @@ def set_tec_temp():
 @api.route("/tec/enable", methods = ['POST'])
 def tec_enable():
     # parse the temperature from the query params
-    temp = request.args.get("temperature")
+    temp = request.args.get("value")
     if not temp:
         return Response(response='no temperature specified\n', status=400)
 
@@ -68,6 +69,31 @@ def tec_enable():
         return Response(response='error starting TEC controller: ' + str(e), status=400)
 
     return Response(status=204)
+
+
+@api.route("/pirt/enable", methods = ['POST'])
+def pirt_enable():
+    pirt1280().enable()
+    return Response(status=204)
+
+@api.route("/pirt/disable", methods = ['POST'])
+def pirt_disable():
+    pirt1280().disable()
+    return Response(status=204)
+
+@api.route("/pirt/integration", methods = ['POST'])
+def pirt_integration():
+    # parse the integration from the query params
+    integration = request.args.get("value")
+    if not integration:
+        return Response(response='no integration specified\n', status=400)
+
+    integration = float(integration)
+    pirt1280().set_integration(integration)
+
+    return Response(status=204)
+
+
 
 
 @api.route("/<filename>")

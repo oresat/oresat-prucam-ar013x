@@ -1,0 +1,13 @@
+[Unit]
+Description=barebones service that disables the CFC TEC if the main program is not active
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=5s
+# working directory assume oresat user and repo in home dir
+WorkingDirectory=/home/oresat/oresat-linux-prucam/testing/cfc
+ExecStart=/home/oresat/oresat-linux-prucam/testing/cfc/cfc_watchdog.py
+
+[Install]
+WantedBy=multi-user.target
