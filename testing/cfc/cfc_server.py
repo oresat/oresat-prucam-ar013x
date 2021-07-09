@@ -22,7 +22,7 @@ pixel_bytes = cols * rows * 2
 path="/dev/prucam"
 
 
-@api.route("/tec/disable", methods = ['POST'])
+@api.route("/tec/disable", methods = ['PUT'])
 def tec_disable():
     ctrl.stop()
     return Response(status=204)
@@ -32,10 +32,10 @@ def get_tec_temp():
     temp = ctrl.get_temp()
     return Response(response=str(temp), status=200)
 
-@api.route("/tec/temperature", methods = ['POST'])
+@api.route("/tec/temperature", methods = ['PUT'])
 def set_tec_temp():
 
-    temp = request.args.get("temperature")
+    temp = request.args.get("value")
     if not temp:
         return Response(response='no temperature specified\n', status=400)
 
@@ -48,10 +48,10 @@ def set_tec_temp():
     return Response(status=204)
 
 
-@api.route("/tec/enable", methods = ['POST'])
+@api.route("/tec/enable", methods = ['PUT'])
 def tec_enable():
     # parse the temperature from the query params
-    temp = request.args.get("value")
+    temp = request.args.get("temperature")
     if not temp:
         return Response(response='no temperature specified\n', status=400)
 
@@ -60,9 +60,6 @@ def tec_enable():
     if temp < -30 or temp > 40:
         return Response(response='temperature must be between -30C and 40C\n', status=400)
 
-
-    print("TEMPERATURE: ", temp)
-    
     try:
         ctrl.start(20)
     except Exception as e:
@@ -71,29 +68,65 @@ def tec_enable():
     return Response(status=204)
 
 
-@api.route("/pirt/enable", methods = ['POST'])
+@api.route("/pirt/enable", methods = ['PUT'])
 def pirt_enable():
     pirt1280().enable()
     return Response(status=204)
 
-@api.route("/pirt/disable", methods = ['POST'])
+
+@api.route("/pirt/disable", methods = ['PUT'])
 def pirt_disable():
     pirt1280().disable()
     return Response(status=204)
 
-@api.route("/pirt/integration", methods = ['POST'])
-def pirt_integration():
-    # parse the integration from the query params
-    integration = request.args.get("value")
-    if not integration:
-        return Response(response='no integration specified\n', status=400)
 
-    integration = float(integration)
-    pirt1280().set_integration(integration)
+@api.route("/pirt/setting/<setting>", methods = ['PUT'])
+def pirt_settings(setting):
+    value = request.args.get("value")
+    if not value:
+        return Response(response='no value specified\n', status=400)
+
+    if setting == "integration":
+        pirt1280().set_integration(float(value))
+    elif setting == "coff":
+        pirt1280().set_coff(int(value))
+    elif setting == "cws":
+        pirt1280().set_cws(int(value))
+    elif setting == "hb":
+        pirt1280().set_hb(int(value))
+    elif setting == "roff":
+        pirt1280().set_roff(int(value))
+    elif setting == "rws":
+        pirt1280().set_rws(int(value))
+    elif setting == "conf0":
+        pirt1280().set_conf0(int(value))
+    elif setting == "conf1":
+        pirt1280().set_conf1(int(value))
+    elif setting == "conf2":
+        pirt1280().set_conf2(int(value))
+    elif setting == "conf3":
+        pirt1280().set_conf3(int(value))
+    elif setting == "conf4":
+        pirt1280().set_conf4(int(value))
+    elif setting == "vhi":
+        pirt1280().set_vhi(int(value))
+    elif setting == "vlo":
+        pirt1280().set_vlo(int(value))
+    elif setting == "ncp":
+        pirt1280().set_ncp(int(value))
+
+    # write a raw register by specifying reg and value
+    elif setting == "raw":
+        reg = request.args.get("reg")
+        if not reg:
+            return Response(response='no register specified\n', status=400)
+
+        pirt1280().write_reg_raw(int(reg),int(value))
+
+    else:
+        return Response(response='unknown setting: ' + setting, status=400)
 
     return Response(status=204)
-
-
 
 
 @api.route("/<filename>")
@@ -103,10 +136,6 @@ def get_image(filename):
     if "favicon" in filename:
         return Response()
 
-    if "integration" in request.args:
-        itg_time = request.args.get("integration")
-        logging.info("setting integration time to {}".format(itg_time))
-
     fd = os.open(path, os.O_RDWR)
     fio = io.FileIO(fd, closefd = False)
 
@@ -115,6 +144,11 @@ def get_image(filename):
 
     # read from prucam into buffer
     fio.readinto(imgbuf)
+        
+    # if raw query param is set, return the raw buffer
+    raw = request.args.get("raw")
+    if raw:
+        return Response(bytes(imgbuf), mimetype='text/plain')
 
     # write raw buffer out to file
     out = open('img.buf', 'wb')

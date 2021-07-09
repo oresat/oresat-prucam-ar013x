@@ -99,7 +99,6 @@ class pirt1280:
 
         self.set_roff(8)
         self.set_coff(8)
-        #self.set_cws(default_cws)
         self.set_hb(32)
         self.set_single_lane()
         self.set_integration(0.001)
