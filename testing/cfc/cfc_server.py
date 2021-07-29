@@ -61,7 +61,7 @@ def tec_enable():
         return Response(response='temperature must be between -30C and 40C\n', status=400)
 
     try:
-        ctrl.start(20)
+        ctrl.start(temp)
     except Exception as e:
         return Response(response='error starting TEC controller: ' + str(e), status=400)
 

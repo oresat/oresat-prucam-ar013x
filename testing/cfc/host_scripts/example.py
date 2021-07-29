@@ -24,7 +24,7 @@ def get_test_image():
     requests.put(cfc_host + "/pirt/setting/integration?value=0.01")
 
     # TEC temperature setpoint in celcius
-    tec_setpoint = 28
+    tec_setpoint = 10
 
     # set the TEC temperature to 10C (defined above)
     requests.put(cfc_host + "/tec/enable?temperature=" + str(tec_setpoint))
@@ -35,6 +35,10 @@ def get_test_image():
         print("TEC at " + str(tec_temp) + "C, waiting...")
         time.sleep(1)
         tec_temp = float(requests.get(cfc_host + "/tec/temperature").text)
+
+    # wait for temperature to settle
+    print("waiting for temperature to settle")
+    time.sleep(5)
 
     print("saving image.png")
     # get the image as a PNG!
@@ -56,7 +60,7 @@ def get_test_image():
     requests.put(cfc_host + "/tec/disable")
 
     # disable the PIRT1280
-    requests.put(cfc_host + "/pirt/enable")
+    requests.put(cfc_host + "/pirt/disable")
 
 def main():
     try:
@@ -66,7 +70,7 @@ def main():
 
     # always disable the TEC and PIRT, even on error
     requests.put(cfc_host + "/tec/disable")
-    requests.put(cfc_host + "/pirt/enable")
+    requests.put(cfc_host + "/pirt/disable")
 
 
 if __name__ == "__main__":

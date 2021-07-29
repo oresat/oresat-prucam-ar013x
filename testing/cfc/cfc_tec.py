@@ -223,7 +223,7 @@ ctrl = __TecController()
 if __name__ == "__main__":
     try:
         # little test program
-        ctrl.start(20)
+        ctrl.start(10)
         time.sleep(2000)
         ctrl.set_temp(15)
         time.sleep(20)
