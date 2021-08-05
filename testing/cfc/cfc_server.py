@@ -144,6 +144,9 @@ def get_image(filename):
 
     # read from prucam into buffer
     fio.readinto(imgbuf)
+    
+    # close the file
+    os.close(fd)
         
     # if raw query param is set, return the raw buffer
     raw = request.args.get("raw")
