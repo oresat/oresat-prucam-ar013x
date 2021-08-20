@@ -10,7 +10,8 @@
   fragment@0 {
     target = <&ocp>;
     __overlay__ {
-      P1_28_pinmux { status = "disabled"; };	/* gpio0_13.uart1_rtsn */
+      P1_35_pinmux { status = "disabled"; };	/* gpio0_13.uart1_rtsn */
+      P2_35_pinmux { status = "disabled"; };	/* gpio0_13.uart1_rtsn */
     };
   };
 
@@ -32,37 +33,8 @@
     };
   };
 
-  // overlay to enable CFC GPIO
-  fragment@2 {
-    target = <&ocp>;
-    __overlay__ {
-      cape-universal {
-        compatible = "gpio-of-helper";
-        status = "okay";
-        pinctrl-names = "default";
-        pinctrl-0 = <&cfc_pins>; /* this must point to pinmux name below */
-
-        /* must overlay P2_35 because it is used by the pocketbeagle
-           and I could not find a way to delete a node */
-        P2_35 {
-          gpio-name = "sensor_enable";
-          gpio = <&gpio2 22 0>; // gpio2_22 == gpio 86 == AM335X_PIN_LCD_VSYNC
-          input; // TODO remove
-          dir-changeable; // TODO remove
-        };
-
-        P1_35 {
-          gpio-name = "tec_enable";
-          gpio = <&gpio2 24 0>; // gpio2_24 == gpio 88 == AM335X_PIN_LCD_PCLK
-          input; // TODO remove
-          dir-changeable; // TODO remove
-        };
-      };
-    };
-  };
-
   // overlay the pinmux with the pin modes we need
-  fragment@3 {
+  fragment@2 {
     target = <&am33xx_pinmux>;
     __overlay__ {
       cfc_pins: pinmux_cfc_pins {
