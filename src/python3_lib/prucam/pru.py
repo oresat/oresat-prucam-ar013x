@@ -15,6 +15,7 @@ class PRUCam:
         self._pru1_path = "/sys/class/remoteproc/remoteproc2/"
         self._pru0_fw = "prucam_pru0_fw.out"
         self._pru1_fw = "prucam_pru1_fw.out"
+        self._load_fw()
 
     def start(self):
         """
