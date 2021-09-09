@@ -35,7 +35,8 @@ pru. Also the library can load pru's firmware. See `python3-lib/` for more info.
 ### Build prucam Debian packages
 
 - Install build dependencies: ``$ sudo apt install debhelper fakeroot dkms
-linux-headers-`uname -r` device-tree-compiler git python3-setuptools python3-all``
+linux-headers-`uname -r` device-tree-compiler git python3-setuptools python3-all
+ti-pru-cgt-installer``
 - Build prucam Debian packages: `$ dpkg-buildpackage -us -uc`
 
 ## Build prucam without packaging
