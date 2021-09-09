@@ -1,3 +1,9 @@
+prucam (0.3.3-0) bullseye; urgency=low
+
+  * Added support for newer kernels
+
+ -- PSAS <oresat@pdx.edu>  Thu, 09 Sep 2021 09:37:57 -0700
+
 prucam (0.3.2-0) buster; urgency=low
 
   * Bug fixes for python3-prucam.

@@ -6,7 +6,7 @@ set -e
 
 DKMS_NAME=prucam
 DKMS_PACKAGE_NAME=$DKMS_NAME-dkms
-DKMS_VERSION=0.3.2
+DKMS_VERSION=0.3.3
 
 postinst_found=0
 

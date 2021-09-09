@@ -7,7 +7,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="prucam",
-    version="0.3.2",
+    version="0.3.3",
     author="PSAS",
     license="GPL-3.0",
     description="A python library for interfacing the prucam kernel module",
