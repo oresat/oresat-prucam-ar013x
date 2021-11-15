@@ -201,8 +201,8 @@ DEVICE_ATTR(ae_ag_en, S_IRUGO | S_IWUSR, ar013x_auto_exposure_show,
             ar013x_auto_exposure_store);
 DEVICE_ATTR(ae_dg_en, S_IRUGO | S_IWUSR, ar013x_auto_exposure_show,
             ar013x_auto_exposure_store);
-DEVICE_ATTR(ae_min_ana_gain, S_IRUGO | S_IWUSR, ar013x_ae_general_show,
-            ar013x_ae_general_store);
+DEVICE_ATTR(ae_min_ana_gain, S_IRUGO | S_IWUSR, ar013x_auto_exposure_show,
+            ar013x_auto_exposure_store);
 DEVICE_ATTR(ae_roi_x_start_offset, S_IRUGO | S_IWUSR, ar013x_ae_general_show,
             ar013x_ae_general_store);
 DEVICE_ATTR(ae_roi_y_start_offset, S_IRUGO | S_IWUSR, ar013x_ae_general_show,

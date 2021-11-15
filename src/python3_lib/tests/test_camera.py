@@ -79,7 +79,7 @@ def test_write_sysfs(camera):
     camera.ae_luma_target = 1234
     camera.ae_max_ev_step = 1234
     camera.ae_max_exposure = 1234
-    camera.ae_min_ana_gain = 1234
+    camera.ae_min_ana_gain = 1
     camera.ae_min_ev_step = 1234
     camera.ae_min_exposure = 1234
     camera.ae_roi_x_size = 1234

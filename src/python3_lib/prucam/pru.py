@@ -15,6 +15,8 @@ class PRUCam:
         self._pru1_path = "/sys/class/remoteproc/remoteproc2/"
         self._pru0_fw = "prucam_pru0_fw.out"
         self._pru1_fw = "prucam_pru1_fw.out"
+        self.stop()
+        self._load_fw()
 
     def start(self):
         """
@@ -47,10 +49,15 @@ class PRUCam:
 
         self._check_prus_present()
 
-        with open(self._pru0_path + "state", "w") as fptr:
-            fptr.write("stop")
-        with open(self._pru1_path + "state", "w") as fptr:
-            fptr.write("stop")
+        # The state file will throw an errno 22 if a "stop" command is writen
+        # to it while the status is "offline"
+        pru0_s, pru1_s = self.status()
+        if pru0_s != "offline\n":
+            with open(self._pru0_path + "state", "w") as fptr:
+                fptr.write("stop")
+        if pru1_s != "offline\n":
+            with open(self._pru1_path + "state", "w") as fptr:
+                fptr.write("stop")
 
     def restart(self):
         """

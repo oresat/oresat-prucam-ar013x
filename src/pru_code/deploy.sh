@@ -8,8 +8,8 @@ echo "-Building project"
 	make || exit 1
 
 echo "-Placing the firmware"
-	sudo cp gen/prucam_pru0_fw.out /lib/firmware/am335x-pru0-fw
-	sudo cp gen/prucam_pru1_fw.out /lib/firmware/am335x-pru1-fw
+	sudo cp gen/prucam_pru0_fw.out /lib/firmware/
+	sudo cp gen/prucam_pru1_fw.out /lib/firmware/
 
 echo "-Rebooting"
 echo "Rebooting pru-core 1"
