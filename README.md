@@ -36,7 +36,7 @@ pru. Also the library can load pru's firmware. See `python3-lib/` for more info.
 
 - Install build dependencies: ``$ sudo apt install debhelper fakeroot dkms
 linux-headers-`uname -r` device-tree-compiler git python3-setuptools python3-all
-ti-pru-cgt-installer``
+ti-pru-cgt-v2.3``
 - Build prucam Debian packages: `$ dpkg-buildpackage -us -uc`
 
 ## Build prucam without packaging
@@ -50,7 +50,7 @@ ti-pru-cgt-installer``
 
 ### PRU firmware
 
-- Install dependencies: `$ sudo apt install ti-pru-cgt-installer`
+- Install dependencies: `$ sudo apt install ti-pru-cgt-v2.3`
 - Compile and install pru firmware `sudo ./src/pru_code/deploy.sh`
 
 ### Device tree overlay
