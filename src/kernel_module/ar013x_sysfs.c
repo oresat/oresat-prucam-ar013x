@@ -5,9 +5,10 @@
  * @addtogroup AR013x
  */
 
+#include <linux/sysfs.h>
+
 #include "ar013x_regs.h"
 #include "cam_i2c.h"
-#include <linux/sysfs.h>
 
 #define CONTEXT_A 0
 #define CONTEXT_B 1
@@ -25,7 +26,7 @@ static int context = CONTEXT_A;
 ssize_t ar013x_img_size_show(struct device *dev, struct device_attribute *attr,
                              char *buf)
 {
-    uint16_t start_value = 0, end_value = 0, start_reg, end_reg;
+    u16 start_value = 0, end_value = 0, start_reg, end_reg;
     int len = 0, r;
 
     if (strcmp(attr->attr.name, "x_size") == 0) {
@@ -57,7 +58,7 @@ ssize_t ar013x_img_size_show(struct device *dev, struct device_attribute *attr,
 ssize_t ar013x_img_size_store(struct device *dev, struct device_attribute *attr,
                               const char *buf, size_t count)
 {
-    uint16_t start_value, value, start_reg, end_reg, end_reg_max;
+    u16 start_value, value, start_reg, end_reg, end_reg_max;
     int temp, r;
 
     if ((r = kstrtoint(buf, 10, &temp)) < 0) {
@@ -66,7 +67,7 @@ ssize_t ar013x_img_size_store(struct device *dev, struct device_attribute *attr,
         return r;
     }
 
-    value = (uint16_t)temp;
+    value = (u16)temp;
 
     if (strcmp(attr->attr.name, "x_size") == 0) {
         dev_err(dev, "prucam: %s store value was not a interger",
@@ -105,7 +106,7 @@ ssize_t ar013x_img_size_store(struct device *dev, struct device_attribute *attr,
 ssize_t ar013x_color_gain_show(struct device *dev,
                                struct device_attribute *attr, char *buf)
 {
-    uint16_t value = 0, reg;
+    u16 value = 0, reg;
     int len        = 0, r;
 
     if (strcmp(attr->attr.name, "green1_gain") == 0) {
@@ -140,7 +141,7 @@ ssize_t ar013x_color_gain_store(struct device *dev,
                                 struct device_attribute *attr, const char *buf,
                                 size_t count)
 {
-    uint16_t value, reg;
+    u16 value, reg;
     int temp, r;
 
     if ((r = kstrtoint(buf, 10, &temp)) < 0) {
@@ -149,7 +150,7 @@ ssize_t ar013x_color_gain_store(struct device *dev,
         return r;
     }
 
-    value = (uint16_t)temp;
+    value = (u16)temp;
 
     if (strcmp(attr->attr.name, "green1_gain") == 0) {
         reg = CONTEXT_REG(AR013X_AD_GREEN1_GAIN);
@@ -181,7 +182,7 @@ ssize_t ar013x_color_gain_store(struct device *dev,
 ssize_t ar013x_y_odd_show(struct device *dev, struct device_attribute *attr,
                           char *buf)
 {
-    uint16_t value = 0, reg;
+    u16 value = 0, reg;
     int len        = 0, r;
 
     reg = CONTEXT_REG(AR013X_AD_Y_ODD_INC);
@@ -202,7 +203,7 @@ ssize_t ar013x_y_odd_show(struct device *dev, struct device_attribute *attr,
 ssize_t ar013x_y_odd_store(struct device *dev, struct device_attribute *attr,
                            const char *buf, size_t count)
 {
-    uint16_t value, reg;
+    u16 value, reg;
     int temp, r;
 
     if ((r = kstrtoint(buf, 10, &temp)) < 0) {
@@ -211,7 +212,7 @@ ssize_t ar013x_y_odd_store(struct device *dev, struct device_attribute *attr,
         return r;
     }
 
-    value = (uint16_t)temp;
+    value = (u16)temp;
 
     if (value >= 0x007F) {
         dev_err(dev, "prucam: %s must be <= 0x007F", attr->attr.name);
@@ -230,7 +231,7 @@ ssize_t ar013x_y_odd_store(struct device *dev, struct device_attribute *attr,
 ssize_t ar013x_digital_test_show(struct device *dev,
                                  struct device_attribute *attr, char *buf)
 {
-    uint16_t value = 0;
+    u16 value = 0;
     int len        = 0, r;
 
     r = read_cam_reg(AR013X_AD_DIGITAL_TEST, &value);
@@ -258,7 +259,7 @@ ssize_t ar013x_digital_test_store(struct device *dev,
                                   struct device_attribute *attr,
                                   const char *buf, size_t count)
 {
-    uint16_t input_value, reg_value;
+    u16 input_value, reg_value;
     int temp, r;
 
     if ((r = kstrtoint(buf, 10, &temp)) < 0) {
@@ -267,7 +268,7 @@ ssize_t ar013x_digital_test_store(struct device *dev,
         return r;
     }
 
-    input_value = (uint16_t)temp;
+    input_value = (u16)temp;
 
     r = read_cam_reg(AR013X_AD_DIGITAL_TEST, &reg_value);
     if (r != 0)
@@ -313,7 +314,7 @@ ssize_t ar013x_digital_test_store(struct device *dev,
 ssize_t ar013x_digital_binning_show(struct device *dev,
                                     struct device_attribute *attr, char *buf)
 {
-    uint16_t value = 0;
+    u16 value = 0;
     int len        = 0, r;
 
     r = read_cam_reg(AR013X_AD_DIGITAL_BINNING, &value);
@@ -337,7 +338,7 @@ ssize_t ar013x_digital_binning_store(struct device *dev,
                                      struct device_attribute *attr,
                                      const char *buf, size_t count)
 {
-    uint16_t input_value, reg_value;
+    u16 input_value, reg_value;
     int temp, r;
 
     if ((r = kstrtoint(buf, 10, &temp)) < 0) {
@@ -346,7 +347,7 @@ ssize_t ar013x_digital_binning_store(struct device *dev,
         return r;
     }
 
-    input_value = (uint16_t)temp;
+    input_value = (u16)temp;
 
     if (input_value > 0x3) { // 2 bits
         dev_err(dev, "prucam: %s must be <= 0x3", attr->attr.name);
@@ -379,7 +380,7 @@ ssize_t ar013x_digital_binning_store(struct device *dev,
 ssize_t ar013x_general_show(struct device *dev, struct device_attribute *attr,
                             char *buf)
 {
-    uint16_t value = 0, reg = 0;
+    u16 value = 0, reg = 0;
     int len = 0, r;
 
     if (strcmp(attr->attr.name, "coarse_time") == 0)
@@ -405,7 +406,7 @@ ssize_t ar013x_general_show(struct device *dev, struct device_attribute *attr,
 ssize_t ar013x_general_store(struct device *dev, struct device_attribute *attr,
                              const char *buf, size_t count)
 {
-    uint16_t value, reg = 0;
+    u16 value, reg = 0;
     int temp, r;
 
     if ((r = kstrtoint(buf, 10, &temp)) < 0) {
@@ -414,7 +415,7 @@ ssize_t ar013x_general_store(struct device *dev, struct device_attribute *attr,
         return r;
     }
 
-    value = (uint16_t)temp;
+    value = (u16)temp;
 
     if (strcmp(attr->attr.name, "coarse_time") == 0)
         reg = CONTEXT_REG(AR013X_AD_COARSE_INTEGRATION_TIME);
@@ -438,7 +439,7 @@ ssize_t ar013x_general_store(struct device *dev, struct device_attribute *attr,
 ssize_t ar013x_auto_exposure_show(struct device *dev,
                                   struct device_attribute *attr, char *buf)
 {
-    uint16_t value = 0;
+    u16 value = 0;
     int len        = 0, r;
 
     r = read_cam_reg(AR013X_AD_AE_CTRL_REG, &value);
@@ -469,7 +470,7 @@ ssize_t ar013x_auto_exposure_store(struct device *dev,
                                    struct device_attribute *attr,
                                    const char *buf, size_t count)
 {
-    uint16_t input_value, reg_value;
+    u16 input_value, reg_value;
     int temp, r, size = 0;
 
     if ((r = kstrtoint(buf, 10, &temp)) < 0) {
@@ -478,7 +479,7 @@ ssize_t ar013x_auto_exposure_store(struct device *dev,
         return r;
     }
 
-    input_value = (uint16_t)temp;
+    input_value = (u16)temp;
 
     // make sure valid size
     if (strcmp(attr->attr.name, "min_analog_gain") == 0)
@@ -528,7 +529,7 @@ ssize_t ar013x_auto_exposure_store(struct device *dev,
 ssize_t ar013x_ae_general_show(struct device *dev,
                                struct device_attribute *attr, char *buf)
 {
-    uint16_t value = 0, reg = 0;
+    u16 value = 0, reg = 0;
     int len = 0, r;
 
     if (strcmp(attr->attr.name, "ae_roi_x_start_offset") == 0)
@@ -579,7 +580,7 @@ ssize_t ar013x_ae_general_store(struct device *dev,
                                 struct device_attribute *attr, const char *buf,
                                 size_t count)
 {
-    uint16_t input_value, reg = 0;
+    u16 input_value, reg = 0;
     int r, temp;
 
     if ((r = kstrtoint(buf, 10, &temp)) < 0) {
@@ -588,7 +589,7 @@ ssize_t ar013x_ae_general_store(struct device *dev,
         return r;
     }
 
-    input_value = (uint16_t)temp;
+    input_value = (u16)temp;
 
     if (strcmp(attr->attr.name, "ae_roi_x_start_offset") == 0)
         reg = AR013X_AD_AE_ROI_X_START_OFFSET;

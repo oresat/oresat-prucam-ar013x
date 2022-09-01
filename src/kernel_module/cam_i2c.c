@@ -1,28 +1,33 @@
-#include "cam_i2c.h"
 #include <linux/delay.h>
 #include <linux/i2c.h>
-#include <linux/module.h>
-#include <linux/moduleparam.h>
 #include <linux/version.h>
 
-/** The i2c adapter */
-struct i2c_adapter *i2c_adap;
-/** Used to interact with the image sensor's i2c slave address */
-struct i2c_client *client;
+#include "cam_i2c.h"
 
-int init_cam_i2c(struct i2c_board_info i2c_info)
+#define CAM_I2C_ADDR 0x10
+
+/** The i2c adapter */
+static struct i2c_adapter *i2c_adap;
+/** Used to interact with the image sensor's i2c slave address */
+static struct i2c_client *client;
+/** @breif Represents the address of the AR013X image sensor */
+static const struct i2c_board_info ar013x_i2c_info = {
+    I2C_BOARD_INFO("AR013X", CAM_I2C_ADDR),
+};
+
+int init_cam_i2c(void)
 {
     int ret = 0;
 
     i2c_adap = i2c_get_adapter(2);
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(5,2,6)
-    client = i2c_new_device(i2c_adap, &i2c_info);
+    client = i2c_new_device(i2c_adap, &ar013x_i2c_info);
 #else
-    client = i2c_new_client_device(i2c_adap, &i2c_info);
+    client = i2c_new_client_device(i2c_adap, &ar013x_i2c_info);
 #endif
 
-    if (client == NULL) {
+    if (!client) {
         printk(KERN_ERR "i2c register failed\n");
         ret = -ENXIO;
     }
@@ -40,7 +45,7 @@ int init_camera_regs(camera_regs_t *regs)
 {
     int ret;
 
-    if (regs == NULL)
+    if (!regs)
         return 0; // nothing todo
 
     for (int i = 0;; i++) {
@@ -96,7 +101,7 @@ int read_cam_reg(uint16_t reg, uint16_t *val)
     int ret;
 
     // safety first
-    if (val == NULL)
+    if (!val)
         return -EINVAL;
 
     // I2C send the little byte first, which is sorta big-endian compared
@@ -113,13 +118,19 @@ int read_cam_reg(uint16_t reg, uint16_t *val)
     struct i2c_msg msg[] = {
         // Write the 16bit reg. I2C_M_REV_DIR_ADDR is for the need to trick
         // the i2c driver to think its receiving while it does a write.
-        {.addr  = 0x10,
-         .flags = I2C_M_REV_DIR_ADDR,
-         .len   = 2,
-         .buf   = (char *)&reg_be},
-
+        {
+            .addr  = CAM_I2C_ADDR,
+            .flags = I2C_M_REV_DIR_ADDR,
+            .len   = 2,
+            .buf   = (char *)&reg_be
+        },
         // Receive the 16bit value. The I2C_M_RD is for receiving
-        {.addr = 0x10, .flags = I2C_M_RD, .len = 2, .buf = (char *)&val_be},
+        {
+            .addr = CAM_I2C_ADDR,
+            .flags = I2C_M_RD,
+            .len = 2,
+            .buf = (char *)&val_be
+        },
     };
 
     // start the i2c tranfers and check the return val
@@ -138,8 +149,6 @@ int read_cam_reg(uint16_t reg, uint16_t *val)
 
     // convert the BE value we read to LE and save to argument pointer
     *val = be16_to_cpu(val_be);
-
-    printk(KERN_DEBUG "I2C read for reg 0x%x is 0x%x\n", reg, *val);
 
     return 0;
 }

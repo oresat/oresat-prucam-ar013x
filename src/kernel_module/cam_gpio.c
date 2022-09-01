@@ -1,3 +1,6 @@
+#include <linux/delay.h>
+#include <linux/gpio.h>
+
 #include "cam_gpio.h"
 
 /** camera parallel bus enable */
@@ -133,8 +136,15 @@ int free_cam_gpio(void)
     // create array with all the outputs we need to de-init, in order we want
     // TODO define order here
     gpio *cam_ctrl_gpio[] = {
-        &gpio_bus_oe, &gpio_cam_oe,  &gpio_clk_en,  &gpio_input_en, &gpio_reset,
-        &gpio_saddr,  &gpio_standby, &gpio_trigger, &gpio_vreg_en,
+        &gpio_bus_oe,
+        &gpio_cam_oe,
+        &gpio_clk_en,
+        &gpio_input_en,
+        &gpio_reset,
+        &gpio_saddr,
+        &gpio_standby,
+        &gpio_trigger,
+        &gpio_vreg_en,
         NULL // terminate array will null
     };
 
@@ -200,4 +210,8 @@ void camera_enable(void)
     // once everythign else is set, enable the bus outputs
     gpio_set_value(gpio_cam_oe.num, gpio_cam_oe.enable);
     gpio_set_value(gpio_bus_oe.num, gpio_bus_oe.enable);
+
+    // AR0130 datasheet says sleep for a little bit after enabled vregs and
+    // clock
+    msleep(10);
 }

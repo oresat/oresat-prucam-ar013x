@@ -11,17 +11,8 @@
 #include "ar013x_regs.h"
 #include "cam_i2c.h"
 
-#ifndef CAM_I2C_ADDR
-#define CAM_I2C_ADDR 0x10
-#endif
-
-/** @brief Represents the address of the AR013X image sensor */
-struct i2c_board_info ar0134_i2c_info __initdata = {
-    I2C_BOARD_INFO("AR013X", CAM_I2C_ADDR),
-};
-
 /** @brief startup registers for AR0134 CMOS Digital Image Sensor */
-camera_regs_t ar0134_startupRegs[] = {
+camera_regs_t ar0134_startup_regs[] = {
     {AR013X_AD_RESET_REGISTER, 0x0001},
     {0x0000, 0x0064},                   // delay
     {AR013X_AD_RESET_REGISTER, 0x10D8}, // Disable Serial, Enable Parallel,
