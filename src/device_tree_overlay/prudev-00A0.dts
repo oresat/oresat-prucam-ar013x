@@ -17,10 +17,27 @@
   compatible = "ti,beaglebone", "ti,beaglebone-black", "ti,beaglebone-green";
 
   // identification
-  part-number = "BEAGLELOGIC";
+  part-number = "PRUCAM";
   version = "00A0";
-
+  
   fragment@0 {
+    target = <&ocp>;
+    __overlay__ {
+      P1_20_pinmux { status = "disabled"; };
+      P1_29_pinmux { status = "disabled"; };
+      P1_31_pinmux { status = "disabled"; };
+      P1_33_pinmux { status = "disabled"; };
+      P1_36_pinmux { status = "disabled"; };
+      P2_18_pinmux { status = "disabled"; };
+      P2_22_pinmux { status = "disabled"; };
+      P2_28_pinmux { status = "disabled"; };
+      P2_30_pinmux { status = "disabled"; };
+      P2_32_pinmux { status = "disabled"; };
+      P2_34_pinmux { status = "disabled"; };
+    };
+  };
+
+  fragment@1 {
     target-path="/";
     __overlay__ {
       /* Add default settings for the LA core */
@@ -37,8 +54,9 @@
       };
     };
   };
+
   // overlay to enable camera GPIO
-  fragment@1 {
+  fragment@2 {
     target = <&ocp>;
     __overlay__ {
       cape-universal {
@@ -110,10 +128,9 @@
       };
     };
   };
+
   // overlay to enable camera GPIO pinmux.
-  // TODO we should combine this with above
-  // TODO not sure I need INPUT_EN, but it works with it?
-  fragment@2 {
+  fragment@3 {
     target = <&am33xx_pinmux>;
     __overlay__ {
 
