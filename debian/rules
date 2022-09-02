@@ -8,7 +8,7 @@ export PRU_CGT=/usr/share/ti/cgt-pru
 include /usr/share/dpkg/pkg-info.mk
 
 %:
-	dh $@ --with dkms --with python3 --buildsystem=pybuild
+	dh $@ --with dkms
 
 override_dh_install:
 	# device tree

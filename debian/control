@@ -1,14 +1,9 @@
 Source: prucam
-Maintainer: Ryan Medick <rmedick@pdx.edu>
-Build-Depends: debhelper (>= 10), git, dkms, device-tree-compiler, ti-pru-cgt-v2.3, python3-setuptools, python3-all, fakeroot
+Maintainer: PSAS <oresat@pdx.edu>
+Build-Depends: debhelper (>= 10), git, dkms, device-tree-compiler, ti-pru-cgt-v2.3, ti-pru-software-v6.0, fakeroot
 Homepage: https://github.com/oresat/oresat-linux-prucam
 
 Package: prucam-dkms
 Architecture: armhf
 Depends: ${misc:Depends}, dkms
-Description: Kernel module for PRU and ar013x camera
-
-Package: python3-prucam
-Architecture: all
-Depends: ${misc:Depends}, ${python3:Depends}, python3-opencv, prucam-dkms
-Description: A python library for interfacing the prucam kernel module
+Description: Kernel module, device tree overlay, and PRU firmware for prucam
