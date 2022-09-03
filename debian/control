@@ -1,6 +1,6 @@
 Source: prucam
 Maintainer: PSAS <oresat@pdx.edu>
-Build-Depends: debhelper (>= 10), git, dkms, device-tree-compiler, ti-pru-cgt-v2.3, ti-pru-software-v6.0, fakeroot
+Build-Depends: debhelper (>= 10), dkms, device-tree-compiler, ti-pru-cgt-v2.3, ti-pru-software-v6.0, fakeroot
 Homepage: https://github.com/oresat/oresat-linux-prucam
 
 Package: prucam-dkms

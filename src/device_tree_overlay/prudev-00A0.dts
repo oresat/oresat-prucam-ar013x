@@ -1,17 +1,7 @@
-/*
- * This file is a part of the BeagleLogic project
- * Copyright (C) 2017 Kumar Abhishek <abhishek@theembeddedkitchen.net>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- */
-
-#include <dt-bindings/pinctrl/am33xx.h>
+#include "am33xx.h"
 
 /dts-v1/;
 /plugin/;
-
 
 / {
   compatible = "ti,beaglebone", "ti,beaglebone-black", "ti,beaglebone-green";

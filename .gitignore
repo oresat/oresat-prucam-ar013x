@@ -216,3 +216,6 @@ bb.org-overlays/
 
 # clangd
 compile_commands.json
+
+# device tree overlay temps
+*dts.tmp
