@@ -219,3 +219,6 @@ compile_commands.json
 
 # device tree overlay temps
 *dts.tmp
+
+# captures
+*.bmp
