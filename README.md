@@ -52,7 +52,7 @@ like cameras. See [TI PRU-ICSS webpage] for more details.
 - Capture image:`$ sudo ./test_camera`
   - This will produce `capture_001.bmp`
 
-## Debian packages
+## Debian package
 
 `prucam-dkms` is the kernel module that provides the sysfs interfaces to the
 pru and ar013x camera settings. This package will also install the compiled pru
@@ -64,7 +64,7 @@ To build `prucam-dkms`:
   --no-install-suggestions debhelper fakeroot dkms linux-headers-`uname -r`
   device-tree-compiler ti-pru-cgt-v2.3 ti-pru-software-v6.0``
   - The `--no-install-*` flags are due to `dkms` installing `linux-headers`
-    package for the the kernel version
+    package for the wrong kernel version
 - Build prucam Debian packages: `$ dpkg-buildpackage -us -uc`
 
 [TI PRU-ICSS webpage]:https://processors.wiki.ti.com/index.php/PRU-ICSS
