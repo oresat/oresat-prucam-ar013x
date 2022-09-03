@@ -21,6 +21,9 @@ like cameras. See [TI PRU-ICSS webpage] for more details.
 
 ## Build and install prucam
 
+**NOTE:** The kernel module requires both the device tree overlay and pru
+firmware binaries to be installed to work, so build and insert it last.
+
 ### Device tree overlay
 
 - Install dependencies: `$ sudo apt install device-tree-compiler`
@@ -33,17 +36,18 @@ like cameras. See [TI PRU-ICSS webpage] for more details.
   - Make sure the `#enable_uboot_cap_universal=` line is commented out.
 - Reboot system to apply device tree overlay: `$ sudo reboot`
 
+### PRU firmware
+
+- Install dependencies: `$ sudo apt install ti-pru-cgt-v2.3 ti-pru-software-v6.0`
+- Compile binaries for both PRUs: `$ make`
+- Install binaries for both PRUs: `$ sudo make install`
+
 ### Kernel module
 
 - Install the kernel headers: ``$ sudo apt-get install linux-headers-`uname -r` ``
 - Build kernel module: `$ make -C src/kernel_module clean all`
 - Insert kernel module: `$ sudo insmod src/kernel_module/prucam.ko`
 - **Note:** To remove kernel module: `$ sudo rmmod prucam`
-
-### PRU firmware
-
-- Install dependencies: `$ sudo apt install ti-pru-cgt-v2.3 ti-pru-software-v6.0`
-- Compile and install binaries for both PRUs: `sudo ./src/pru_code/deploy.sh`
 
 ## Test prucam
 
