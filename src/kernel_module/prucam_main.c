@@ -9,6 +9,8 @@
 #include <linux/miscdevice.h>
 #include <linux/module.h>
 #include <linux/platform_device.h>
+#include <linux/pruss.h>
+#include <linux/remoteproc.h>
 #include <linux/sysfs.h>
 #include <linux/uaccess.h>
 
@@ -32,6 +34,8 @@ MODULE_VERSION("0.3.3");
 #define PRUINTC_OFFSET 0x20000
 #define SRSR0_OFFSET   0x200
 #define NUM_IRQS       8
+#define PRU0_FW_NAME   "prucam_pru0_fw.out"
+#define PRU1_FW_NAME   "prucam_pru1_fw.out"
 
 // private data
 struct miscdevice miscdev;
@@ -40,6 +44,8 @@ dma_addr_t dma_handle = (dma_addr_t)NULL;
 int *cpu_addr = NULL;
 int *phys_addr = NULL;
 volatile int int_triggered = 0;
+struct rproc *pru0 = NULL;
+struct rproc *pru1 = NULL;
 
 typedef struct {
     char *name;
@@ -210,13 +216,29 @@ static int prucam_probe(struct platform_device *pdev)
     /* Get a handle to the PRUSS structures */
     dev = &pdev->dev;
 
+    /* Get PRUs */
+    pru0 = pru_rproc_get(node, PRUSS_PRU0);
+    if (IS_ERR(pru0)) {
+        ret = PTR_ERR(pru0);
+        if (ret != -EPROBE_DEFER)
+            dev_err(dev, "Unable to get PRU0.\n");
+        goto error_get_pru0;
+    }
+    pru1 = pru_rproc_get(node, PRUSS_PRU1);
+    if (IS_ERR(pru1)) {
+        ret = PTR_ERR(pru1);
+        if (ret != -EPROBE_DEFER)
+            dev_err(dev, "Unable to get PRU1.\n");
+        goto error_get_pru1;
+    }
+
     /* Get interrupts and install interrupt handlers */
     for (int i = 0; i < NUM_IRQS; i++) {
         irq = platform_get_irq_byname(pdev, irqs[i].name);
         if (irq < 0) {
             ret = irq;
             dev_err(dev, "Unable to get irq %s: %d\n", irqs[i].name, ret);
-            goto error_get_irq;
+            goto error_irq;
         }
 
         /* Save irq numbers for freeing */
@@ -226,8 +248,34 @@ static int prucam_probe(struct platform_device *pdev)
                           dev_name(dev), NULL);
         if (ret < 0) {
             dev_err(dev, "Unable to request irq %s: %d\n", irqs[i].name, ret);
-            goto error_request_irq;
+            goto error_irq;
         }
+    }
+
+    /* Set firmware for PRUs */
+    ret = rproc_set_firmware(pru0, PRU0_FW_NAME);
+    if (ret) {
+        dev_err(dev, "Failed to set PRU0 firmware %s: %d\n",
+            PRU0_FW_NAME, ret);
+        goto error_set_pru0_fw;
+    }
+    ret = rproc_set_firmware(pru1, PRU1_FW_NAME);
+    if (ret) {
+        dev_err(dev, "Failed to set PRU1 firmware %s: %d\n",
+            PRU1_FW_NAME, ret);
+        goto error_set_pru1_fw;
+    }
+
+    /* Boot PRUs (boot PRU1 1st) */
+    ret = rproc_boot(pru1);
+    if (ret) {
+        dev_err(dev, "Failed to boot PRU1: %d\n", ret);
+        goto error_boot_pru1;
+    }
+    ret = rproc_boot(pru0);
+    if (ret) {
+        dev_err(dev, "Failed to boot PRU0: %d\n", ret);
+        goto error_boot_pru0;
     }
 
     // set DMA mask
@@ -325,9 +373,18 @@ error_i2c:
     dma_free_coherent(dev, PIXELS, cpu_addr, dma_handle);
 error_dma_alloc:
 error_dma_set:
-error_get_irq:
+    rproc_shutdown(pru0);
+error_boot_pru0:
+    rproc_shutdown(pru1);
+error_boot_pru1:
+error_set_pru1_fw:
+error_set_pru0_fw:
+error_irq:
     free_irqs();
-error_request_irq:
+    pru_rproc_put(pru1);
+error_get_pru1:
+    pru_rproc_put(pru0);
+error_get_pru0:
     printk("prucam probe failed with: %d\n", ret);
     return ret;
 }
@@ -348,7 +405,14 @@ static int prucam_remove(struct platform_device *pdev)
 
     dma_free_coherent(dev, PIXELS, cpu_addr, dma_handle);
 
+    // stop PRUs
+    rproc_shutdown(pru0);
+    rproc_shutdown(pru1);
+
     free_irqs();
+
+    pru_rproc_put(pru1);
+    pru_rproc_put(pru0);
 
     printk("prucam removed\n");
     return 0;
