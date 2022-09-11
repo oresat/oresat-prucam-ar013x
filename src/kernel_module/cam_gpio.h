@@ -1,11 +1,6 @@
 #ifndef CAM_GPIO_H
 #define CAM_GPIO_H
 
-#include <linux/delay.h>
-#include <linux/gpio.h>
-#include <linux/kernel.h>
-#include <linux/module.h>
-
 // Camera Control Pin Numbers
 #define GPIO_FLASH    16
 #define GPIO_BUS_OE   97
@@ -19,7 +14,7 @@
 #define GPIO_VREG_EN  100
 
 typedef struct {
-    uint8_t num;
+    u8 num;
     bool init;
     bool enable;
     char *label;
