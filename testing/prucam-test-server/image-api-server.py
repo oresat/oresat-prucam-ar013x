@@ -4,6 +4,7 @@ import os
 import io
 from flask import Flask, request, Response
 from time import sleep
+from datetime import datetime
 import numpy as np
 import cv2
 
@@ -14,8 +15,9 @@ cols = 1280
 rows = 960
 pixels = cols * rows
 path="/dev/prucam"
-prucam_sysfs_ctx_settings = "/sys/devices/virtual/pru/prucam/context_settings/"
-prucam_sysfs_ae_settings = "/sys/devices/virtual/pru/prucam/auto_exposure_settings"
+
+prucam_sysfs_ctx_settings = "/sys/devices/platform/prudev/context_settings/"
+prucam_sysfs_ae_settings = "/sys/devices/platform/prudev/auto_exposure_settings/"
 
 # possible camera context settings
 ctx_settings = [
@@ -91,6 +93,44 @@ def settings_from_path_params(request, settings, path):
     if param_changed:
         sleep(0.2)
 
+
+def inject_stats(img, start_position=(10, 10),
+        text_color=(255, 255, 255),
+        text_scale = 0.4,
+        text_thickness = 1,
+        text_seperation = 20,
+        text_font = cv2.FONT_HERSHEY_SIMPLEX):
+    img_height = img.shape[0]
+    img_width  = img.shape[1]
+
+    time = datetime.now()
+
+    def add_text_advance_position(img, pos, text):
+        img =  cv2.putText(img, text, pos, text_font, text_scale, text_color, text_thickness, cv2.LINE_AA)
+        pos = (pos[0], pos[1] + text_seperation)
+        return img, pos
+
+    def read_properties_from_directory(property_names, sysfs_directory):
+        retval=[]
+        for name in property_names:
+            param_path = os.path.join(sysfs_directory, name)
+            print(f"Read file: {param_path}")
+            with open(param_path, 'r+') as f:
+                val = f.read().strip()
+            retval.append((name,val))
+        return retval
+
+    constant_properties = [('time', time), ('img_shape', img.shape)]
+    context_properties = read_properties_from_directory(ctx_settings, prucam_sysfs_ctx_settings)
+    auto_exposure_properteis = read_properties_from_directory(ae_settings, prucam_sysfs_ae_settings)
+
+    all_properties = constant_properties +context_properties  +  auto_exposure_properteis
+    previous_position = start_position
+    for (name, val) in all_properties:
+        img, previous_position = add_text_advance_position(img, previous_position,f'{name}: {val}')
+
+    return img
+
 @api.route("/<filename>")
 def get_image(filename):
 
@@ -124,6 +164,9 @@ def get_image(filename):
 
     # parse the extension from the filename
     ext = os.path.splitext(filename)[1].lower()
+
+    if "stats" in request.args and request.args["stats"] == '1':
+        img = inject_stats(img)
 
     # try to encode the image with the provided image extension
     ok, encoded = cv2.imencode(ext, img)
