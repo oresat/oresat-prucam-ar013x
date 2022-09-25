@@ -94,14 +94,13 @@ def settings_from_path_params(request, settings, path):
         sleep(0.2)
 
 
-def inject_stats(img, start_position=(10, 10),
-        text_color=(255, 255, 255),
-        text_scale = 0.4,
-        text_thickness = 1,
-        text_seperation = 20,
-        text_font = cv2.FONT_HERSHEY_SIMPLEX):
-    img_height = img.shape[0]
-    img_width  = img.shape[1]
+def inject_stats(img,
+                    start_position=(10, 10),
+                    text_color=(255, 255, 255),
+                    text_scale=0.4,
+                    text_thickness=1,
+                    text_seperation=20,
+                    text_font = cv2.FONT_HERSHEY_SIMPLEX):
 
     time = datetime.now()
 
