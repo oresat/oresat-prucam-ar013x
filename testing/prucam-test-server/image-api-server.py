@@ -113,7 +113,6 @@ def inject_stats(img,
         retval=[]
         for name in property_names:
             param_path = os.path.join(sysfs_directory, name)
-            print(f"Read file: {param_path}")
             with open(param_path, 'r+') as f:
                 val = f.read().strip()
             retval.append((name,val))
