@@ -16,7 +16,7 @@ GEN_DIR=gen
 # Common compiler and linker flags (Defined in 'PRU Optimizing C/C++ Compiler User's Guide)
 # Additionally we define SPEED=1 configure the assembly capture loop for
 # 0-50MHz pixel clock
-CFLAGS=-v3 -O0 --display_error_number --endian=little --hardware_mac=on --obj_directory=$(GEN_DIR) --pp_directory=$(GEN_DIR) -ppd -ppa --asm_define=SPEED=1# --keep_asm
+CFLAGS=-v3 -O0 --display_error_number --endian=little --hardware_mac=on --obj_directory=$(GEN_DIR) --pp_directory=$(GEN_DIR) -ppd -ppa --asm_define=SPEED=1 --symdebug:none
 # Linker flags (Defined in 'PRU Optimizing C/C++ Compiler User's Guide)
 LFLAGS=--reread_libs --warn_sections --stack_size=$(STACK_SIZE) --heap_size=$(HEAP_SIZE) 
 MAP=$(GEN_DIR)/$(PROJ_NAME).map

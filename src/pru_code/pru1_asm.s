@@ -2,14 +2,14 @@
 	.cdecls "pru1_fw.c"
 
 ; C declaration:
-; void do_transfer(uint8_t* addr);
+; void image_transfer(uint8_t* addr);
 ; Argument 'addr' contains the base address of the image buffer
 ; and is passed in R14
 	.clink
-	.global do_transfer
-do_transfer:
-  ; signal the other PRU to start the capture
-  ldi r31, SYS_EVT_16_TRIGGER
+	.global image_transfer
+image_transfer:
+  ; wait for signal from the kernel to start
+  wbs r31, KERNEL_TO_PRUS_R31_BIT
 
   ; r18 contains the number of lines left in the image. 
   ldi r18, ROWS
@@ -19,7 +19,7 @@ LINE_RESTART:
   ldi r17, LINE_CHUNKS
 
 CHUNK_RESTART:
-  ; wait for signal from other PRU to start frame capture
+  ; wait for signal from other PRU to transfer current chunk
   wbs r31, PRU0_TO_PRU1_R31_BIT
 
   ; clear the system event interrupt in INTC SICR register. Here we use the
@@ -49,7 +49,7 @@ CHUNK_RESTART:
   qblt LINE_RESTART, r18, 0
 
   ; trigger interrupt 20 to tell kernel the transfer is complete
-  ldi r31, SYS_EVT_20_TRIGGER
+  ldi r31, SYS_EVT_18_TRIGGER
   ; TODO do I need to clear this interrupt? I haven't in the past...
 
   jmp     r3.w2 ; jump to link register to return 

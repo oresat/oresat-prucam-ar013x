@@ -1,11 +1,10 @@
-#include <linux/delay.h>
 #include <linux/device.h>
 #include <linux/dma-mapping.h>
 #include <linux/fs.h>
 #include <linux/init.h>
 #include <linux/interrupt.h>
+#include <linux/irq.h>
 #include <linux/kernel.h>
-#include <linux/kobject.h>
 #include <linux/miscdevice.h>
 #include <linux/module.h>
 #include <linux/platform_device.h>
@@ -13,6 +12,7 @@
 #include <linux/remoteproc.h>
 #include <linux/sysfs.h>
 #include <linux/uaccess.h>
+#include <linux/completion.h>
 
 #include "ar0130_ctrl_regs.h"
 #include "ar0134_ctrl_regs.h"
@@ -23,56 +23,65 @@
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Oliver Rew");
-MODULE_DESCRIPTION("Interface to a PRU and a camera");
-MODULE_VERSION("0.3.3");
+MODULE_AUTHOR("Ryan Medick");
+MODULE_DESCRIPTION("AM335x PRU Camera Interface Driver");
+MODULE_VERSION("1.0.0");
 
 #define ROWS           960
 #define COLS           1280
 #define PIXELS         (ROWS * COLS)
-#define PRUBASE        0x4a300000
-#define PRUSHAREDRAM   (PRUBASE + 0x10000)
-#define PRUINTC_OFFSET 0x20000
-#define SRSR0_OFFSET   0x200
-#define NUM_IRQS       8
 #define PRU0_FW_NAME   "prucam_pru0_fw.out"
 #define PRU1_FW_NAME   "prucam_pru1_fw.out"
 
 // private data
 struct miscdevice miscdev;
 struct mutex mutex;
-dma_addr_t dma_handle = (dma_addr_t)NULL;
-int *cpu_addr = NULL;
-int *phys_addr = NULL;
-volatile int int_triggered = 0;
+
+/**
+ * physical/virtual addresses of the frame buffer used to transfer image from 
+ * PRU to kernel
+ */
+dma_addr_t frame_buffer_pa = (dma_addr_t)NULL;
+int *frame_buffer_va = NULL;
+
+/**
+ * completion to signal interrupt was received from PRU, signalling that the
+ * image was captured and copied to the buffer
+ */
+static DECLARE_COMPLETION(pru_to_arm_irq_trigger);
+
 struct rproc *pru0 = NULL;
 struct rproc *pru1 = NULL;
+
+/* underlying pruss object */
+struct pruss *pruss; 
+
+/* PRU shared memory region */
+struct pruss_mem_region shared_mem;
+
+static irqreturn_t pru_irq_handler(int irq_num, void *);
 
 typedef struct {
     char *name;
     int num;
-} irq_info;
+    irq_handler_t handler;
+} irq_info_t;
 
 /**
- * mapping of an irq name(from the platfor device in the device device-tree)
- * to it's assigned linux irq number(in /proc/interrupt). When the irq is
- * successfully retrieved and requested, the 'num' will be assigned.
+ * interrupts as defined in the device-tree overlay. The number is the value
+ * returned by platform_get_irq_byname. The last 2 are inter-PRU interrupts and
+ * don't interrupt the kernel. However, we still use the kernel driver to
+ * configure them, but specifiy the 'no_action' handler
  */
-irq_info irqs[] = {
-    // clang-format off
-    {"20", -1},
-    {"21", -1},
-    {"22", -1},
-    {"23", -1},
-    {"24", -1},
-    {"25", -1},
-    {"26", -1},
-    {"27", -1},
-    // clang-format on
+irq_info_t irqs[] = {
+    {.name = "pru1_to_arm", .num = -1, .handler = pru_irq_handler},
+    {.name = "arm_to_prus", .num = -1, .handler = no_action},
+    {.name = "pru0_to_pru1", .num = -1, .handler = no_action},
 };
 
 static void free_irqs(void)
 {
-    for (int i = 0; i < NUM_IRQS; i++)
+    for (int i = 0; i < (sizeof(irqs) / sizeof(irqs[0])); i++)
         if (irqs[i].num > -1)
             free_irq(irqs[i].num, NULL);
 }
@@ -82,80 +91,30 @@ static int dev_open(struct inode *inodep, struct file *filep)
     return 0;
 }
 
-/**
- * Writes directly to the the PRU SRSR0 register that manually
- * triggers PRU system events, which can fire the PRU interrupt bit in R31.
- * Then it writes the address of the physical memory it allocated to a known
- * location in PRU shared RAM. THe PRU reads this and writes the image to this
- * address. I am writing without permission to the PRU shared RAM. This
- * should be ok, but in the future I should set aside of piece of PRU shared
- * RAM to ensure it doesn't accidentally use it
- */
-static int pru_handshake(int phys_addr)
-{
-
-    // ioremap physical locations in the PRU shared ram
-    void __iomem *pru_shared_ram;
-    pru_shared_ram = ioremap((int)PRUSHAREDRAM, 4);
-
-    // write physical address to PRU shared RAM where a PRU can find it
-    writel(phys_addr, pru_shared_ram);
-
-    // ioremap PRU SRSR0 reg
-    void __iomem *pru_srsr0;
-    pru_srsr0 = ioremap((int)(PRUBASE + PRUINTC_OFFSET + SRSR0_OFFSET), 4);
-
-    // set bit 24 in PRU SRSR0 to trigger event 24
-    writel(0x1000000, pru_srsr0);
-
-    // TODO add a response via an interrupt from the PRU and return error
-
-    // unmap iomem
-    iounmap(pru_shared_ram);
-    iounmap(pru_srsr0);
-
-    return 0;
-}
-
 static ssize_t dev_read(struct file *filep, char *buffer, size_t len,
                         loff_t *offset)
 {
-
-    int handshake;
-    char *phys_base;
     int ret;
-
-    int_triggered = 0; // init int_triggered to false on read start
-
-    // TODO address to known location with checksum to other location this can
-    // replace the handshake
 
     mutex_lock(&mutex);
 
-    // signal PRU and tell it where to write the data
-    printk(KERN_INFO "prucam: sending handshake.");
-    handshake = pru_handshake((int)phys_addr);
-    if (handshake < 0) {
-        printk(KERN_ERR "prucam: PRU Handshake failed: %p\n", phys_addr);
+    printk(KERN_INFO "prucam: signalling PRUs to capture image.");
+
+    /* Trigger ARM to PRUs interrupt to start image capture */
+    irq_set_irqchip_state(irqs[1].num, IRQCHIP_STATE_PENDING, true);
+
+    /* Wait for intc to be triggered for 500ms */
+    ret = wait_for_completion_timeout(&pru_to_arm_irq_trigger, msecs_to_jiffies(500));
+    if (ret == 0) {
+        printk(KERN_ERR "prucam: interrupt never triggered\n");
         mutex_unlock(&mutex);
         return -1;
     }
 
-    // wait for intc to be triggered
-    for (volatile int i = 0; i < (1 << 27) && !int_triggered; i++);
+    printk(KERN_INFO "prucam: image captured\n");
 
-    if (!int_triggered) {
-        printk(KERN_ERR "prucam: Interrupt never triggered!\n");
-        mutex_unlock(&mutex);
-        return -1;
-    }
-
-    int_triggered = 0;
-    printk(KERN_INFO "prucam: Interrupt Triggered!\n");
-
-    phys_base = (char *)cpu_addr;
-
-    ret = copy_to_user(buffer, phys_base, PIXELS); // TODO use __copy_to_user
+    /* copy the image to the caller */
+    ret = copy_to_user(buffer, (char*)frame_buffer_va, PIXELS);
     if (ret) {
         printk(KERN_ERR "prucam: copy to user failed\n");
         mutex_unlock(&mutex);
@@ -164,37 +123,22 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len,
 
     mutex_unlock(&mutex);
 
-    return 0;
+    return PIXELS;
 }
 
-static irq_handler_t irqhandler(unsigned int irq_num, void *dev_id,
-                                struct pt_regs *regs)
+static irqreturn_t pru_irq_handler(int irq_num, void *dev_id)
 {
+    /* Signal that interrupt has been triggered */
+    complete(&pru_to_arm_irq_trigger);
 
-    // signal that interrupt has been triggered
-    int_triggered = 1;
-
-    printk(KERN_INFO "prucam: irq %d handled.\n", irq_num);
-
-    return (irq_handler_t)IRQ_HANDLED;
+    return IRQ_HANDLED;
 }
 
-/**
- * @brief The device release function that is called whenever the device is
- * closed/released by the userspace program
- * @param inodep A pointer to an inode object (defined in linux/fs.h)
- * @param filep A pointer to a file object (defined in linux/fs.h)
- */
 static int dev_release(struct inode *inodep, struct file *filep)
 {
-    printk(KERN_INFO "prucam: Device successfully closed\n");
     return 0;
 }
 
-/**
- * TODO - dedicated error interrupt line from PRU that triggers handler to shut
- * down other opperations
- */
 static const struct file_operations prucam_fops = {
     .owner   = THIS_MODULE,
     .open    = dev_open,
@@ -216,15 +160,17 @@ static int prucam_probe(struct platform_device *pdev)
     /* Get a handle to the PRUSS structures */
     dev = &pdev->dev;
 
+    dev_info(dev, "probing device: %s\n", pdev->name);
+
     /* Get PRUs */
-    pru0 = pru_rproc_get(node, PRUSS_PRU0);
+    pru0 = pru_rproc_get(node, PRUSS_PRU0, NULL);
     if (IS_ERR(pru0)) {
         ret = PTR_ERR(pru0);
         if (ret != -EPROBE_DEFER)
             dev_err(dev, "Unable to get PRU0.\n");
         goto error_get_pru0;
     }
-    pru1 = pru_rproc_get(node, PRUSS_PRU1);
+    pru1 = pru_rproc_get(node, PRUSS_PRU1, NULL);
     if (IS_ERR(pru1)) {
         ret = PTR_ERR(pru1);
         if (ret != -EPROBE_DEFER)
@@ -232,8 +178,24 @@ static int prucam_probe(struct platform_device *pdev)
         goto error_get_pru1;
     }
 
+    /* Get the underlying PRUSS object */
+    pruss = pruss_get(pru0);
+    if (IS_ERR(pruss)) {
+        dev_err(dev, "error requesting shared memory region: %d", ret);
+        ret = PTR_ERR(pruss);
+        goto err_pruss_get;
+    }
+
+    /* Request the shared memory region */
+    ret = pruss_request_mem_region(pruss, PRUSS_MEM_SHRD_RAM2, &shared_mem);
+    if (ret) {
+        dev_err(dev, "error requesting shared memory region: %d", ret);
+        goto err_shared_mem;
+    }
+
     /* Get interrupts and install interrupt handlers */
-    for (int i = 0; i < NUM_IRQS; i++) {
+    for (int i = 0; i < (sizeof(irqs) / sizeof(irqs[0])); i++) {
+        /* Get the irq based on the name in the device tree node */
         irq = platform_get_irq_byname(pdev, irqs[i].name);
         if (irq < 0) {
             ret = irq;
@@ -241,15 +203,18 @@ static int prucam_probe(struct platform_device *pdev)
             goto error_irq;
         }
 
-        /* Save irq numbers for freeing */
-        irqs[i].num = irq;
-
-        ret = request_irq(irq, (irq_handler_t)irqhandler, IRQF_TRIGGER_RISING,
+        dev_info(dev, "irq: %s -> %d\n", irqs[i].name, irq);
+        
+        /* Request that irq from the kernel */
+        ret = request_irq(irq, irqs[i].handler, IRQ_TYPE_LEVEL_HIGH, 
                           dev_name(dev), NULL);
         if (ret < 0) {
             dev_err(dev, "Unable to request irq %s: %d\n", irqs[i].name, ret);
             goto error_irq;
         }
+
+        /* Save irq numbers for freeing */
+        irqs[i].num = irq;
     }
 
     /* Set firmware for PRUs */
@@ -278,28 +243,34 @@ static int prucam_probe(struct platform_device *pdev)
         goto error_boot_pru0;
     }
 
-    // set DMA mask
+    /* Set DMA mask */
     ret = dma_set_coherent_mask(dev, 0xffffffff);
     if (ret) {
         dev_err(dev, "Failed to set DMA mask : error %d\n", ret);
         goto error_dma_set;
     }
 
-     // I initial used GFP_DMA flag below, but I could not allocate >1 MiB
-     // I am unsure what the ideal flags for this are, but GFP_KERNEL seems to
-     // work
-    cpu_addr = dma_alloc_coherent(dev, PIXELS, &dma_handle, GFP_KERNEL);
-    if (!cpu_addr) {
+    /* Allocate a physically contiguous frame buffer */
+    frame_buffer_va = dma_alloc_coherent(dev, PIXELS, &frame_buffer_pa, GFP_KERNEL);
+    if (!frame_buffer_va) {
         dev_err(dev, "Failed to allocate DMA\n");
         ret = -1;
         goto error_dma_alloc;
     }
 
-    printk(KERN_INFO "prucam: virtual address: %p\n", cpu_addr);
+    dev_info(dev, "prucam: frame buffer virt/phys: 0x%p/0x%p\n", frame_buffer_va, (void*)frame_buffer_pa);
 
-    phys_addr = (int *)dma_handle;
-    printk(KERN_INFO "prucam: physical dddress: %p\n", phys_addr);
-    int_triggered = 0;
+    /**
+     * Write the frame buffer physical address to the base of PRU shared mem. 
+     * The PRUs will read the address from here and then write the image to
+     * this buffer. In the future, this will like be a struct with additional
+     * information to be transferred to the PRUs. 
+     * TODO We are technically writing to this memory without the PRUs permission 
+     * and it would be preferrable to somehow allocate this memory in the PRUs, 
+     * perhaps with the linker script, so it could not be clobbered
+     * TODO write checksum to other location for PRU to verify
+     */
+    writel((int)frame_buffer_pa, shared_mem.va);
 
     ret = init_cam_i2c();
     if (ret < 0) {
@@ -307,16 +278,17 @@ static int prucam_probe(struct platform_device *pdev)
         goto error_i2c;
     }
 
-    // init the camera control GPIO
+    /* Init the camera control GPIO */
     ret = init_cam_gpio();
     if (ret < 0) {
-        dev_err(dev, "Init camrea gpio failed: %d.\n", ret);
+        dev_err(dev, "Init camera gpio failed: %d.\n", ret);
         goto error_gpio;
     }
 
+    /* enable the camera via gpio */
     camera_enable();
 
-    // detect camera
+    /* Detect image sensor model */
     ret = read_cam_reg(AR013X_AD_CHIP_VERSION_REG, &cam_ver);
     if (ret < 0) {
         dev_err(dev, "Read camera version over i2c failed\n");
@@ -334,21 +306,21 @@ static int prucam_probe(struct platform_device *pdev)
         goto error_i2c_rw;
     }
 
-    // init camera i2c regs
+    /* Init camera regs via I2C */
     ret = init_camera_regs(startup_regs);
     if (ret < 0) {
         dev_err(dev, "init regs using i2c failed\n");
         goto error_i2c_rw;
     }
 
-    // add sysfs
+    /* Add sysfs control interface */
     ret = sysfs_create_groups(&dev->kobj, ar013x_groups);
     if (ret) {
         dev_err(dev, "Registration failed.\n");
         goto error_sysfs;
     }
 
-    // add misc device for file ops
+    /* add misc device for file ops */
     miscdev.fops = &prucam_fops;
     miscdev.minor = MISC_DYNAMIC_MINOR;
     miscdev.mode = S_IRUGO;
@@ -370,7 +342,7 @@ error_i2c_rw:
 error_gpio:
     end_cam_i2c();
 error_i2c:
-    dma_free_coherent(dev, PIXELS, cpu_addr, dma_handle);
+    dma_free_coherent(dev, PIXELS, frame_buffer_va, frame_buffer_pa);
 error_dma_alloc:
 error_dma_set:
     rproc_shutdown(pru0);
@@ -381,6 +353,10 @@ error_set_pru1_fw:
 error_set_pru0_fw:
 error_irq:
     free_irqs();
+    pruss_release_mem_region(pruss, &shared_mem);
+err_shared_mem:
+    pruss_put(pruss);
+err_pruss_get:
     pru_rproc_put(pru1);
 error_get_pru1:
     pru_rproc_put(pru0);
@@ -395,19 +371,24 @@ static int prucam_remove(struct platform_device *pdev)
     
     misc_deregister(&miscdev);
 
-    // remove the sysfs attr
+    /* Remove the sysfs attr */
     sysfs_remove_groups(&dev->kobj, ar013x_groups);
 
-    // put camera GPIO in good state and free the lines
+    /* Put camera GPIO in good state and free the lines */
     free_cam_gpio();
 
     end_cam_i2c();
 
-    dma_free_coherent(dev, PIXELS, cpu_addr, dma_handle);
+    dma_free_coherent(dev, PIXELS, frame_buffer_va, frame_buffer_pa);
 
-    // stop PRUs
+    /* Free the shared mem region and pruss */
+    pruss_release_mem_region(pruss, &shared_mem);
+    pruss_put(pruss);
+
+    /* Stop PRUs */
     rproc_shutdown(pru0);
     rproc_shutdown(pru1);
+
 
     free_irqs();
 
@@ -419,18 +400,20 @@ static int prucam_remove(struct platform_device *pdev)
 }
 
 static const struct of_device_id prucam_of_ids[] = {
-    { .compatible = "prudev,prudev"},
+    { .compatible = "prucam,prucam"},
     { /* sentinel */ },
 };
+
 MODULE_DEVICE_TABLE(of, prucam_of_ids);
 
 static struct platform_driver prucam_driver = {
     .driver = {
-        .name = "prudev",
+        .name = "prucam",
         .owner = THIS_MODULE,
         .of_match_table = prucam_of_ids,
     },
     .probe = prucam_probe,
     .remove = prucam_remove,
 };
+
 module_platform_driver(prucam_driver);

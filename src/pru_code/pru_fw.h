@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <pru_cfg.h>
 #include <pru_intc.h>
-#include "resource_table_empty.h"
 #include <pru_ctrl.h>
 
 #define SHARED_RAM 0x00010000 //offset of PRU shared mem
@@ -19,27 +18,28 @@
 #define HSYNC_MASK 1U<<HSYNC_BIT
 
 // R31 inter-PRU interrupt bit definitions
-#define PRU1_TO_PRU0_R31_BIT 30
-#define PRU1_TO_PRU0_R31_MASK 1U<<PRU1_TO_PRU0_R31_BIT
+#define KERNEL_TO_PRUS_R31_BIT 30 
+#define KERNEL_TO_PRUS_R31_MASK 1U<<KERNEL_TO_PRUS_R31_BIT
 #define PRU0_TO_PRU1_R31_BIT 31
 #define PRU0_TO_PRU1_R31_MASK 1U<<PRU0_TO_PRU1_R31_BIT
-
-#define PRU1_TO_PRU0_EVENT 16
-#define PRU0_TO_PRU1_EVENT 17
-#define PRU_TO_KERNEL_EVENT 20
 
 // PRU INTC base address constant table offset
 #define INTC_CO_TABLE_ENTRY C0
 #define SICR_REG_OFFSET 0x24
 
+// PRU system events 
+#define KERNEL_TO_PRUS_EVENT 16
+#define PRU0_TO_PRU1_EVENT 17
+#define PRU1_TO_KERNEL_EVENT 18
+
 // R31 bit 5 enables the interrupt number written to bits 4:0    
 #define SYS_EVT_ENABLE 1<<5
 
 // The number written to R31 will trigger the corresponding
-// system events 16-31
-#define SYS_EVT_20_TRIGGER (SYS_EVT_ENABLE | 0x04)
-#define SYS_EVT_16_TRIGGER (SYS_EVT_ENABLE | 0x00)
-#define SYS_EVT_17_TRIGGER (SYS_EVT_ENABLE | 0x01)
+// system events 16-31. See TRM section 4.4.1.2.2>
+#define SYS_EVT_16_TRIGGER (SYS_EVT_ENABLE | (KERNEL_TO_PRUS_EVENT - 16))
+#define SYS_EVT_17_TRIGGER (SYS_EVT_ENABLE | (PRU0_TO_PRU1_EVENT - 16))
+#define SYS_EVT_18_TRIGGER (SYS_EVT_ENABLE | (PRU1_TO_KERNEL_EVENT - 16))
 
 #define SCRATCHPAD_BANK_0 10
 
@@ -53,14 +53,11 @@
 volatile register uint32_t __R30;
 volatile register uint32_t __R31;
 
-void initPRU();
+void init_pru();
 
 // pru_shared_vars_t is a struct that defines variables shared between the PRU
 // cores. It must be declared and mapped to a known address in both PRU FWs
 struct pru_shared_vars_t {
   uint8_t buf0[COLS]; // shared line buffer
 };
-
-// define the base address of the shared var struct
-#define SHARED_VAR_ADDR (struct pru_shared_vars_t*)(SHARED_RAM + 0x100);
 

@@ -222,3 +222,6 @@ compile_commands.json
 
 # captures
 *.bmp
+
+# vim swap files
+*.swp
