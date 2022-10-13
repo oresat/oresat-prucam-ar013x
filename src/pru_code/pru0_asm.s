@@ -64,12 +64,12 @@ __timing_routine .macro
 	.clink
 	.global capture_frame_8b
 capture_frame_8b:
-  ; wait for signal from PRU1 to start frane capture
-  wbs r31, PRU1_TO_PRU0_R31_BIT
+  ; wait for signal from kernel to start frame capture
+  wbs r31, KERNEL_TO_PRUS_R31_BIT
 
   ; clear the system event interrupt in INTC SICR register. Here we use the
   ; constants tables to address the register for efficiency
-  ldi r16, PRU1_TO_PRU0_EVENT
+  ldi r16, KERNEL_TO_PRUS_EVENT
   sbco &r16, INTC_CO_TABLE_ENTRY, SICR_REG_OFFSET, 4
   
   ; r16.w0 holds the number of lines left in the image(rows) and r16.w2 holds

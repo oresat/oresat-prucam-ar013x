@@ -6,7 +6,8 @@
 Kernel module, device tree overlay, and PRU firmware to interface to camera
 using the PRUs on the [AM335x].
 
-_**NOTE:**_ This was tested on Debian with kernel 4.14 and 4.19.
+_**NOTE:**_ This was tested on Debian with kernel 5.10. TI's PRU support libraries are constantly changing, so this
+likely does not work on older kernels anymore.
 
 ## What is a PRU?
 
@@ -31,8 +32,6 @@ firmware binaries to be installed to work, so build and insert it last.
 - Install dtbo: `$ sudo make -C src/device_tree_overlay install`
 - Edit `/boot/uEnv.txt`
   - Change the `#dtb_overlay=<file8>.dtbo` line to `dtb_overlay=/lib/firmware/prudev-00A0.dtbo`
-  - Make sure the correct pru rproc `uboot_overlay_pru=` line is not commented
-  out (depends kernel version).
   - Make sure the `#enable_uboot_cap_universal=` line is commented out.
 - Reboot system to apply device tree overlay: `$ sudo reboot`
 
