@@ -213,6 +213,7 @@ bb.org-overlays/
 *.ko.cmd
 *.pybuild/
 .Module.symvers.cmd
+debian/changelog
 
 # clangd
 compile_commands.json
