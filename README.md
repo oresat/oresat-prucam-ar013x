@@ -69,7 +69,7 @@ To build `prucam-dkms`:
   device-tree-compiler ti-pru-cgt-v2.3 ti-pru-software-v6.0``
   - The `--no-install-*` flags are due to `dkms` installing `linux-headers`
     package for the wrong kernel version
-- Build prucam Debian packages: `$ dpkg-buildpackage -us -uc`
+- Build prucam Debian packages: `$ ./makedeb.sh`
 
 [TI PRU-ICSS webpage]:https://processors.wiki.ti.com/index.php/PRU-ICSS
 [AM335x]:https://www.ti.com/processors/sitara-arm/am335x-cortex-a8/overview.html
