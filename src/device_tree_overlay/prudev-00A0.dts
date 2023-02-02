@@ -13,17 +13,10 @@
   fragment@0 {
     target = <&ocp>;
     __overlay__ {
-      P1_20_pinmux { status = "disabled"; };
-      P1_29_pinmux { status = "disabled"; };
-      P1_31_pinmux { status = "disabled"; };
-      P1_33_pinmux { status = "disabled"; };
-      P1_36_pinmux { status = "disabled"; };
-      P2_18_pinmux { status = "disabled"; };
-      P2_22_pinmux { status = "disabled"; };
-      P2_28_pinmux { status = "disabled"; };
-      P2_30_pinmux { status = "disabled"; };
-      P2_32_pinmux { status = "disabled"; };
-      P2_34_pinmux { status = "disabled"; };
+      // Sensor Enable, LCD_VSYNC, gpio2_22, Linux GPIO 86
+      P2_35_pinmux { status = "disabled"; }; 
+      // TEC enable, LCD_PCLK, gpio2_24, Linux GPIO 88
+      P1_35_pinmux { status = "disabled"; }; 
     };
   };
 
@@ -82,61 +75,21 @@
         pinctrl-names = "default";
         pinctrl-0 = <&camera_pins>; /* this must point to pinmux name below */
 
-        flash {
-          gpio-name = "flash"; 
-          gpio = <&gpio0 16 0>; /* mii1_txd3 */
-          input;
-        };
-        bus_oe {
-          gpio-name = "bus_oe";
-          gpio = <&gpio3 1 0>; /* mii1_crs */
+        sensor_enable {
+          gpio-name = "sensor_eanble"; 
+          gpio = <&gpio2 22 0>; /* LCD_VSYNC */
           output;
         };
-        cam_oe {
-          gpio-name = "cam_oe";
-          gpio = <&gpio3 0 0>; /* mii1_col */
-          output;
-        };
-        clk_en {
-          gpio-name = "clk_en"; 
-          gpio = <&gpio3 10 0>; /* mii1_rx_clk */
-          output;
-        };
-        input_en {
-          gpio-name = "input_en";
-          gpio = <&gpio2 21 0>; /* mii1_rxd0 */
-          output;
-        };
-        reset {
-          gpio-name = "reset";
-          gpio = <&gpio2 20 0>; /* mii1_rxd1 */
-          output;
-        };
-        saddr {
-          gpio-name = "saddr";
-          gpio = <&gpio2 19 0>; /* mii1_rxd2 */
-          output;
-        };
-        standby {
-          gpio-name = "standby";
-          gpio = <&gpio2 18 0>; /* mii1_rxd3 */
-          output;
-        };
-        trigger {
-          gpio-name = "trigger";
-          gpio = <&gpio3 2 0>; /* mii1_rx_er */
-          output;
-        };
-        vreg_en {
-          gpio-name = "vreg_en";
-          gpio = <&gpio3 4 0>; /* mii1_rx_dv */
+        tec_enable {
+          gpio-name = "tec_enable"; 
+          gpio = <&gpio2 24 0>; /* LCD_PCLK */
           output;
         };
       };
     };
   };
 
-  // overlay to enable camera GPIO pinmux.
+  // overlay to enable GPIO, PRU
   fragment@3 {
     target = <&am33xx_pinmux>;
     __overlay__ {
@@ -144,19 +97,11 @@
       camera_pins: camera_pins { 
         #gpio-cells = <2>;
         pinctrl-single,pins = <
-        /* Pins for camera control */
-        AM33XX_IOPAD(AM335X_PIN_MII1_TXD3, PIN_OUTPUT | MUX_MODE7)   /* mii1_txd3 == flash */
-        AM33XX_IOPAD(AM335X_PIN_MII1_CRS, PIN_OUTPUT | MUX_MODE7)    /* mii1_crs == bus_oe */
-        AM33XX_IOPAD(AM335X_PIN_MII1_COL, PIN_OUTPUT | MUX_MODE7)    /* mii1_col == cam_oe */
-        AM33XX_IOPAD(AM335X_PIN_MII1_RX_CLK, PIN_OUTPUT | MUX_MODE7) /* mii1_rx_clk == clk_en */
-        AM33XX_IOPAD(AM335X_PIN_MII1_RXD0, PIN_OUTPUT | MUX_MODE7)   /* mii1_rxd0 == input_en */
-        AM33XX_IOPAD(AM335X_PIN_MII1_RXD1, PIN_OUTPUT | MUX_MODE7)   /* mii1_rxd1 == reset */
-        AM33XX_IOPAD(AM335X_PIN_MII1_RXD2, PIN_OUTPUT | MUX_MODE7)   /* mii1_rxd2 == saddr */
-        AM33XX_IOPAD(AM335X_PIN_MII1_RXD3, PIN_OUTPUT | MUX_MODE7)   /* mii1_rxd3 == standby */
-        AM33XX_IOPAD(AM335X_PIN_MII1_RX_ER, PIN_OUTPUT | MUX_MODE7)  /* mii1_rx_er == trigger */
-        AM33XX_IOPAD(AM335X_PIN_MII1_RX_DV, PIN_OUTPUT | MUX_MODE7)  /* mii1_rx_dv == vreg_en */
+        /* Output pins for sensor and TEC control */
+        AM33XX_IOPAD(AM335X_PIN_LCD_PCLK, PIN_OUTPUT | MUX_MODE7)   /* TEC enable, LCD_PCLK, gpio2_24 (mode 7), Linux GPIO 88 */
+        AM33XX_IOPAD(AM335X_PIN_LCD_VSYNC, PIN_OUTPUT | MUX_MODE7)  /* Sensor Enable, LCD_VSYNC, gpio2_22 (mode 7), Linux GPIO 86 */
 
-        /* Pins for camera parallel bus. Currently only getting top 8 bits of pixel data */
+        /* Pins for camera parallel bus. 8 data bits + 1 clock bit */
         AM33XX_IOPAD(AM335X_PIN_MCASP0_ACLKX, PIN_INPUT | MUX_MODE6)      /* mcasp0_aclkx == pru0_r31_0 == camera D4 */
         AM33XX_IOPAD(AM335X_PIN_MCASP0_FSX, PIN_INPUT | MUX_MODE6)        /* mcasp0_fsx == pru0_r31_1 == camera D5 */
         AM33XX_IOPAD(AM335X_PIN_MCASP0_AXR0, PIN_INPUT | MUX_MODE6)       /* mcasp0_axr0 == pru0_r31_2 == camera D6 */
@@ -165,11 +110,8 @@
         AM33XX_IOPAD(AM335X_PIN_MCASP0_FSR, PIN_INPUT | MUX_MODE6)        /* mcasp0_fsr == pru0_r31_5 == camera D9 */
         AM33XX_IOPAD(AM335X_PIN_MCASP0_AXR1, PIN_INPUT | MUX_MODE6)       /* mcasp0_axr1 == pru0_r31_6 == camera D10 */
         AM33XX_IOPAD(AM335X_PIN_MCASP0_AHCLKX, PIN_INPUT | MUX_MODE6)     /* mcasp0_ahclkx == pru0_r31_7 == camera D11 */
-        AM33XX_IOPAD(AM335X_PIN_GPMC_AD14, PIN_INPUT | MUX_MODE6)         /* gpmc_ad14 == pru0_r31_14 == camera VSYNC */
-        AM33XX_IOPAD(AM335X_PIN_GPMC_AD15, PIN_INPUT | MUX_MODE6)         /* gpmc_ad15 == pru0_r31_15 == camera HSYNC */
         AM33XX_IOPAD(AM335X_PIN_XDMA_EVENT_INTR1, PIN_INPUT | MUX_MODE5)  /* xdma_event_intr1 == pru0_r31_16 == camera pixel clock */
         >; };
     };
   };
-
 };
