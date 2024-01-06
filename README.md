@@ -28,8 +28,8 @@ firmware binaries to be installed to work, so build and insert it last.
 ### Device tree overlay
 
 - Install dependencies: `$ sudo apt install device-tree-compiler`
-- Compile dtbo: `$ make -C src/device_tree_overlay`
-- Install dtbo: `$ sudo make -C src/device_tree_overlay install`
+- Compile dtbo: `$ make -C device_tree_overlay`
+- Install dtbo: `$ sudo make -C device_tree_overlay install`
 - Edit `/boot/uEnv.txt`
   - Change the `#dtb_overlay=<file8>.dtbo` line to `dtb_overlay=/lib/firmware/prudev-00A0.dtbo`
   - Make sure the `#enable_uboot_cap_universal=` line is commented out.
@@ -44,8 +44,8 @@ firmware binaries to be installed to work, so build and insert it last.
 ### Kernel module
 
 - Install the kernel headers: ``$ sudo apt-get install linux-headers-`uname -r` ``
-- Build kernel module: `$ make -C src/kernel_module clean all`
-- Insert kernel module: `$ sudo insmod src/kernel_module/prucam.ko`
+- Build kernel module: `$ make -C kernel_module clean all`
+- Insert kernel module: `$ sudo insmod kernel_module/prucam.ko`
 - **Note:** To remove kernel module: `$ sudo rmmod prucam`
 
 ## Test prucam

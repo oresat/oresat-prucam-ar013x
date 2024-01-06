@@ -9,13 +9,13 @@ include /usr/share/dpkg/pkg-info.mk
 
 override_dh_install:
 	# device tree
-	make -C src/device_tree_overlay clean all
+	make -C device_tree_overlay clean all
 	# pru fw
-	make -C src/pru_code clean all
+	make -C pru_code clean all
 	# dkms
 	mkdir -p etc/modules-load.d
 	echo "prucam" > etc/modules-load.d/prucam.conf
-	dh_install src/kernel_module/* usr/src/prucam-$(DEB_VERSION_UPSTREAM)/
+	dh_install kernel_module/* usr/prucam-$(DEB_VERSION_UPSTREAM)/
 
 override_dh_dkms:
 	dh_dkms -V $(DEB_VERSION_UPSTREAM)
