@@ -1,0 +1,11 @@
+[Unit]
+Description=Reload prucam kernel module
+
+[Service]
+Type=oneshot
+User=root
+OnBootSec=20sec
+ExecStart=/bin/bash -c 'rmmod prucam && insmod /usr/src/prucam-*/prucam.ko'
+
+[Install]
+WantedBy=multi-user.target

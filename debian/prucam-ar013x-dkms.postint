@@ -4,9 +4,9 @@ set -e
 # The original file can be found in template-dkms-mkdeb/debian/postinst
 # in the DKMS tarball, check it for copyright notices.
 
-DKMS_NAME=prucam
+DKMS_NAME=prucam-ar013x
 DKMS_PACKAGE_NAME=$DKMS_NAME-dkms
-DKMS_VERSION=0.3.3
+DKMS_VERSION=0.1.0
 
 postinst_found=0
 
@@ -29,3 +29,7 @@ case "$1" in
 	;;
 esac
 # End automatically added section
+
+systemctl daemon-reload
+systemctl enable prucam
+systemctl restart prucam

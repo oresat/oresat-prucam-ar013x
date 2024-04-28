@@ -1,4 +1,5 @@
-etc/modules-load.d/prucam.conf etc/modules-load.d
+etc/modules-load.d/prucam.conf /etc/modules-load.d
 src/device_tree_overlay/prudev-00A0.dtbo /lib/firmware/
 src/pru_code/gen/prucam_pru0_fw.out /lib/firmware/
 src/pru_code/gen/prucam_pru1_fw.out /lib/firmware/
+prucam.service /etc/systemd/system
