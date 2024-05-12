@@ -197,10 +197,10 @@ gen/
 .debhelper/
 *.debhelper*
 *.substvars
-prucam-pirt1280-dkms_*
+prucam-ar013x-dkms_*
 debhelper-build-stamp
 files
-prucam-pirt1280-dkms/
+prucam-ar013x-dkms/
 *.deb
 changelog
 
