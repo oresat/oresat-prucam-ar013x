@@ -4,6 +4,7 @@ mod_name=prucam.ko
 ccflags-y := -std=gnu99 -Wno-declaration-after-statement #this disables the C90 warnings
 
 KDIR ?= /lib/modules/`uname -r`/build
+PWD ?= `pwd`
 
 all: module
 

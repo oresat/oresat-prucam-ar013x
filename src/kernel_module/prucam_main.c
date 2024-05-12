@@ -38,7 +38,7 @@ struct miscdevice miscdev;
 struct mutex mutex;
 
 /**
- * physical/virtual addresses of the frame buffer used to transfer image from 
+ * physical/virtual addresses of the frame buffer used to transfer image from
  * PRU to kernel
  */
 dma_addr_t frame_buffer_pa = (dma_addr_t)NULL;
@@ -54,7 +54,7 @@ struct rproc *pru0 = NULL;
 struct rproc *pru1 = NULL;
 
 /* underlying pruss object */
-struct pruss *pruss; 
+struct pruss *pruss;
 
 /* PRU shared memory region */
 struct pruss_mem_region shared_mem;
@@ -204,9 +204,9 @@ static int prucam_probe(struct platform_device *pdev)
         }
 
         dev_info(dev, "irq: %s -> %d\n", irqs[i].name, irq);
-        
+
         /* Request that irq from the kernel */
-        ret = request_irq(irq, irqs[i].handler, IRQ_TYPE_LEVEL_HIGH, 
+        ret = request_irq(irq, irqs[i].handler, IRQ_TYPE_LEVEL_HIGH,
                           dev_name(dev), NULL);
         if (ret < 0) {
             dev_err(dev, "Unable to request irq %s: %d\n", irqs[i].name, ret);
@@ -261,12 +261,12 @@ static int prucam_probe(struct platform_device *pdev)
     dev_info(dev, "prucam: frame buffer virt/phys: 0x%p/0x%p\n", frame_buffer_va, (void*)frame_buffer_pa);
 
     /**
-     * Write the frame buffer physical address to the base of PRU shared mem. 
+     * Write the frame buffer physical address to the base of PRU shared mem.
      * The PRUs will read the address from here and then write the image to
      * this buffer. In the future, this will like be a struct with additional
-     * information to be transferred to the PRUs. 
-     * TODO We are technically writing to this memory without the PRUs permission 
-     * and it would be preferrable to somehow allocate this memory in the PRUs, 
+     * information to be transferred to the PRUs.
+     * TODO We are technically writing to this memory without the PRUs permission
+     * and it would be preferrable to somehow allocate this memory in the PRUs,
      * perhaps with the linker script, so it could not be clobbered
      * TODO write checksum to other location for PRU to verify
      */
@@ -368,7 +368,7 @@ error_get_pru0:
 static int prucam_remove(struct platform_device *pdev)
 {
     struct device *dev = &pdev->dev;
-    
+
     misc_deregister(&miscdev);
 
     /* Remove the sysfs attr */
@@ -400,7 +400,7 @@ static int prucam_remove(struct platform_device *pdev)
 }
 
 static const struct of_device_id prucam_of_ids[] = {
-    { .compatible = "prucam,prucam"},
+    { .compatible = "psas,prucam-ar013x"},
     { /* sentinel */ },
 };
 

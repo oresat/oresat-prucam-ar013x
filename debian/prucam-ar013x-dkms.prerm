@@ -14,4 +14,4 @@ esac
 # End automatically added section
 
 # remove module
-rmmod $DKMS_NAME
+rmmod $DKMS_NAME || true
