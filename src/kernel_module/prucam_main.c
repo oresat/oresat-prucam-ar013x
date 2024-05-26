@@ -25,7 +25,7 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Oliver Rew");
 MODULE_AUTHOR("Ryan Medick");
 MODULE_DESCRIPTION("AM335x PRU Camera Interface Driver");
-MODULE_VERSION("1.0.1");
+MODULE_VERSION("1.1.0");
 
 #define ROWS           960
 #define COLS           1280
