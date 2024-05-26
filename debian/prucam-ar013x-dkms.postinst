@@ -29,6 +29,3 @@ case "$1" in
 	;;
 esac
 # End automatically added section
-
-systemctl daemon-reload
-systemctl enable prucam
