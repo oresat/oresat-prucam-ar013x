@@ -1,9 +1,5 @@
-/**  TODO:
-*     dt-bindings/gpio/gpio.h and dt-bindings/pinctrl/am33xx.h
-*     are include in kernel source.
-*/
-
-#include "am33xx.h"
+#include <dt-bindings/pinctrl/am33xx.h>
+#include <dt-bindings/gpio/gpio.h>
 
 /dts-v1/;
 /plugin/;
@@ -69,16 +65,16 @@
                       "arm_to_prus", 
                       "pru0_to_pru1";
 
-    flash-gpios     = <&gpio0 1 0>;
-    bus_oe-gpios    = <&gpio3 1 0>;
-    cam_oe-gpios    = <&gpio3 0 0>;
-    clk_en-gpios    = <&gpio3 10 0>;
-    input_en-gpios  = <&gpio2 21 0>;
-    reset-gpios     = <&gpio2 20 0>;
-    saddr-gpios     = <&gpio2 19 0>;
-    standby-gpios   = <&gpio2 18 0>;
-    trigger-gpios   = <&gpio3 2 0>;
-    vreg_en-gpios   = <&gpio3 4 0>;
+    flash-gpios     = <&gpio0 1 GPIO_ACTIVE_HIGH>;
+    bus_oe-gpios    = <&gpio3 1 GPIO_ACTIVE_HIGH>;
+    cam_oe-gpios    = <&gpio3 0 GPIO_ACTIVE_HIGH>;
+    clk_en-gpios    = <&gpio3 10 GPIO_ACTIVE_HIGH>;
+    input_en-gpios  = <&gpio2 21 GPIO_ACTIVE_HIGH>;
+    reset-gpios     = <&gpio2 20 GPIO_ACTIVE_HIGH>;
+    saddr-gpios     = <&gpio2 19 GPIO_ACTIVE_HIGH>;
+    standby-gpios   = <&gpio2 18 GPIO_ACTIVE_HIGH>;
+    trigger-gpios   = <&gpio3 2 GPIO_ACTIVE_HIGH>;
+    vreg_en-gpios   = <&gpio3 4 GPIO_ACTIVE_HIGH>;
   };
 };
 
@@ -88,29 +84,29 @@
     #gpio-cells = <2>;
     pinctrl-single,pins = <
       /* Pins for camera control */
-      AM33XX_IOPAD(AM335X_PIN_MII1_TXD3, PIN_OUTPUT | MUX_MODE7)   /* mii1_txd3 == flash */
-      AM33XX_IOPAD(AM335X_PIN_MII1_CRS, PIN_OUTPUT | MUX_MODE7)    /* mii1_crs == bus_oe */
-      AM33XX_IOPAD(AM335X_PIN_MII1_COL, PIN_OUTPUT | MUX_MODE7)    /* mii1_col == cam_oe */
-      AM33XX_IOPAD(AM335X_PIN_MII1_RX_CLK, PIN_OUTPUT | MUX_MODE7) /* mii1_rx_clk == clk_en */
-      AM33XX_IOPAD(AM335X_PIN_MII1_RXD0, PIN_OUTPUT | MUX_MODE7)   /* mii1_rxd0 == input_en */
-      AM33XX_IOPAD(AM335X_PIN_MII1_RXD1, PIN_OUTPUT | MUX_MODE7)   /* mii1_rxd1 == reset */
-      AM33XX_IOPAD(AM335X_PIN_MII1_RXD2, PIN_OUTPUT | MUX_MODE7)   /* mii1_rxd2 == saddr */
-      AM33XX_IOPAD(AM335X_PIN_MII1_RXD3, PIN_OUTPUT | MUX_MODE7)   /* mii1_rxd3 == standby */
-      AM33XX_IOPAD(AM335X_PIN_MII1_RX_ER, PIN_OUTPUT | MUX_MODE7)  /* mii1_rx_er == trigger */
-      AM33XX_IOPAD(AM335X_PIN_MII1_RX_DV, PIN_OUTPUT | MUX_MODE7)  /* mii1_rx_dv == vreg_en */
+      AM33XX_PADCONF(AM335X_PIN_MII1_TXD3, PIN_OUTPUT, MUX_MODE7)   /* mii1_txd3 == flash */
+      AM33XX_PADCONF(AM335X_PIN_MII1_CRS, PIN_OUTPUT, MUX_MODE7)    /* mii1_crs == bus_oe */
+      AM33XX_PADCONF(AM335X_PIN_MII1_COL, PIN_OUTPUT, MUX_MODE7)    /* mii1_col == cam_oe */
+      AM33XX_PADCONF(AM335X_PIN_MII1_RX_CLK, PIN_OUTPUT, MUX_MODE7) /* mii1_rx_clk == clk_en */
+      AM33XX_PADCONF(AM335X_PIN_MII1_RXD0, PIN_OUTPUT, MUX_MODE7)   /* mii1_rxd0 == input_en */
+      AM33XX_PADCONF(AM335X_PIN_MII1_RXD1, PIN_OUTPUT, MUX_MODE7)   /* mii1_rxd1 == reset */
+      AM33XX_PADCONF(AM335X_PIN_MII1_RXD2, PIN_OUTPUT, MUX_MODE7)   /* mii1_rxd2 == saddr */
+      AM33XX_PADCONF(AM335X_PIN_MII1_RXD3, PIN_OUTPUT, MUX_MODE7)   /* mii1_rxd3 == standby */
+      AM33XX_PADCONF(AM335X_PIN_MII1_RX_ER, PIN_OUTPUT, MUX_MODE7)  /* mii1_rx_er == trigger */
+      AM33XX_PADCONF(AM335X_PIN_MII1_RX_DV, PIN_OUTPUT, MUX_MODE7)  /* mii1_rx_dv == vreg_en */
 
       /* Pins for camera parallel bus. Currently only getting top 8 bits of pixel data */
-      AM33XX_IOPAD(AM335X_PIN_MCASP0_ACLKX, PIN_INPUT | MUX_MODE6)      /* mcasp0_aclkx == pru0_r31_0 == camera D4 */
-      AM33XX_IOPAD(AM335X_PIN_MCASP0_FSX, PIN_INPUT | MUX_MODE6)        /* mcasp0_fsx == pru0_r31_1 == camera D5 */
-      AM33XX_IOPAD(AM335X_PIN_MCASP0_AXR0, PIN_INPUT | MUX_MODE6)       /* mcasp0_axr0 == pru0_r31_2 == camera D6 */
-      AM33XX_IOPAD(AM335X_PIN_MCASP0_AHCLKR, PIN_INPUT | MUX_MODE6)     /* mcasp0_ahclkr == pru0_r31_3 == camera D7 */
-      AM33XX_IOPAD(AM335X_PIN_MCASP0_ACLKR, PIN_INPUT | MUX_MODE6)      /* mcasp0_aclkr == pru0_r31_4 == camera D8 */
-      AM33XX_IOPAD(AM335X_PIN_MCASP0_FSR, PIN_INPUT | MUX_MODE6)        /* mcasp0_fsr == pru0_r31_5 == camera D9 */
-      AM33XX_IOPAD(AM335X_PIN_MCASP0_AXR1, PIN_INPUT | MUX_MODE6)       /* mcasp0_axr1 == pru0_r31_6 == camera D10 */
-      AM33XX_IOPAD(AM335X_PIN_MCASP0_AHCLKX, PIN_INPUT | MUX_MODE6)     /* mcasp0_ahclkx == pru0_r31_7 == camera D11 */
-      AM33XX_IOPAD(AM335X_PIN_GPMC_AD14, PIN_INPUT | MUX_MODE6)         /* gpmc_ad14 == pru0_r31_14 == camera VSYNC */
-      AM33XX_IOPAD(AM335X_PIN_GPMC_AD15, PIN_INPUT | MUX_MODE6)         /* gpmc_ad15 == pru0_r31_15 == camera HSYNC */
-      AM33XX_IOPAD(AM335X_PIN_XDMA_EVENT_INTR1, PIN_INPUT | MUX_MODE5)  /* xdma_event_intr1 == pru0_r31_16 == camera pixel clock */
+      AM33XX_PADCONF(AM335X_PIN_MCASP0_ACLKX, PIN_INPUT, MUX_MODE6)      /* mcasp0_aclkx == pru0_r31_0 == camera D4 */
+      AM33XX_PADCONF(AM335X_PIN_MCASP0_FSX, PIN_INPUT, MUX_MODE6)        /* mcasp0_fsx == pru0_r31_1 == camera D5 */
+      AM33XX_PADCONF(AM335X_PIN_MCASP0_AXR0, PIN_INPUT, MUX_MODE6)       /* mcasp0_axr0 == pru0_r31_2 == camera D6 */
+      AM33XX_PADCONF(AM335X_PIN_MCASP0_AHCLKR, PIN_INPUT, MUX_MODE6)     /* mcasp0_ahclkr == pru0_r31_3 == camera D7 */
+      AM33XX_PADCONF(AM335X_PIN_MCASP0_ACLKR, PIN_INPUT, MUX_MODE6)      /* mcasp0_aclkr == pru0_r31_4 == camera D8 */
+      AM33XX_PADCONF(AM335X_PIN_MCASP0_FSR, PIN_INPUT, MUX_MODE6)        /* mcasp0_fsr == pru0_r31_5 == camera D9 */
+      AM33XX_PADCONF(AM335X_PIN_MCASP0_AXR1, PIN_INPUT, MUX_MODE6)       /* mcasp0_axr1 == pru0_r31_6 == camera D10 */
+      AM33XX_PADCONF(AM335X_PIN_MCASP0_AHCLKX, PIN_INPUT, MUX_MODE6)     /* mcasp0_ahclkx == pru0_r31_7 == camera D11 */
+      AM33XX_PADCONF(AM335X_PIN_GPMC_AD14, PIN_INPUT, MUX_MODE6)         /* gpmc_ad14 == pru0_r31_14 == camera VSYNC */
+      AM33XX_PADCONF(AM335X_PIN_GPMC_AD15, PIN_INPUT, MUX_MODE6)         /* gpmc_ad15 == pru0_r31_15 == camera HSYNC */
+      AM33XX_PADCONF(AM335X_PIN_XDMA_EVENT_INTR1, PIN_INPUT, MUX_MODE5)  /* xdma_event_intr1 == pru0_r31_16 == camera pixel clock */
     >;
   };
 };
