@@ -6,7 +6,7 @@ MKFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 CURRENT_DIR := $(notdir $(patsubst %/,%,$(dir $(MKFILE_PATH))))
 PROJ_NAME=$(CURRENT_DIR)
 LINKER_COMMAND_FILE=./AM335x_PRU.cmd
-TI_PRU_SW_PKG_PATH=/usr/lib/ti/pru-software-support-package-v6.5
+TI_PRU_SW_PKG_PATH=/usr/lib/ti/pru-software-support-package-v6.3
 LIBS=--library=$(TI_PRU_SW_PKG_PATH)/lib/rpmsg_lib.lib
 INCLUDE=--include_path=$(TI_PRU_SW_PKG_PATH)/include --include_path=$(TI_PRU_SW_PKG_PATH)/include/am335x
 STACK_SIZE=0x100
