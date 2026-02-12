@@ -206,7 +206,7 @@ changelog
 
 # device tree overlay
 *.dtbo
-*.dts.tmp
+*.dtso.tmp
 bb.org-overlays/
 
 # kernel module
