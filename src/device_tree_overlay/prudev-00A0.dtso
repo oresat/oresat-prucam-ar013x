@@ -1,8 +1,14 @@
+/dts-v1/;
+/plugin/;
+
 #include <dt-bindings/pinctrl/am33xx.h>
 #include <dt-bindings/gpio/gpio.h>
 
-/dts-v1/;
-/plugin/;
+&{/chosen} {
+  overlays {
+    prudev.kernel = __TIMESTAMP__;
+  };
+};
 
 &ocp {
   P1_20_pinmux { status = "disabled"; };
@@ -16,6 +22,19 @@
   P2_30_pinmux { status = "disabled"; };
   P2_32_pinmux { status = "disabled"; };
   P2_34_pinmux { status = "disabled"; };
+};
+
+/**
+* TODO: 
+* These are disabled to prevent pinmux collisions,
+* but wouldn't be necessary if we had custom device trees
+*/
+&mcasp0 {
+  status = "disabled";
+};
+
+&mac_sw {
+  status = "disabled";
 };
 
 &{/} {
@@ -65,8 +84,8 @@
                       "arm_to_prus", 
                       "pru0_to_pru1";
 
-    flash-gpios     = <&gpio0 1 GPIO_ACTIVE_HIGH>;
     bus_oe-gpios    = <&gpio3 1 GPIO_ACTIVE_HIGH>;
+    flash-gpios     = <&gpio0 1 GPIO_ACTIVE_HIGH>;
     cam_oe-gpios    = <&gpio3 0 GPIO_ACTIVE_HIGH>;
     clk_en-gpios    = <&gpio3 10 GPIO_ACTIVE_HIGH>;
     input_en-gpios  = <&gpio2 21 GPIO_ACTIVE_HIGH>;
@@ -80,7 +99,7 @@
 
 // overlay to enable camera GPIO pinmux.
 &am33xx_pinmux {
-  camera_pins: camera_pins {
+  camera-pins: camera-pins {
     #gpio-cells = <2>;
     pinctrl-single,pins = <
       /* Pins for camera control */
