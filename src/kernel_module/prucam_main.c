@@ -2,6 +2,7 @@
 #include <linux/device.h>
 #include <linux/dma-mapping.h>
 #include <linux/fs.h>
+#include <linux/gpio/consumer.h>
 #include <linux/init.h>
 #include <linux/interrupt.h>
 #include <linux/irq.h>
@@ -20,6 +21,7 @@
 #include "ar013x_sysfs.h"
 #include "cam_gpio.h"
 #include "cam_i2c.h"
+#include "linux/err.h"
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Oliver Rew");
@@ -274,9 +276,9 @@ static int prucam_probe(struct platform_device *pdev)
     }
 
     /* Init the camera control GPIO */
-    ret = init_cam_gpio();
+    ret = init_cam_gpio(dev);
     if (ret < 0) {
-        dev_err(dev, "Init camera gpio failed: %d.\n", ret);
+        dev_err(dev, "Failed to init gpio: %d.\n", ret);
         goto error_gpio;
     }
 
@@ -335,6 +337,7 @@ error_sysfs:
 error_i2c_rw:
     free_cam_gpio();
 error_gpio:
+    dev_err(dev, "Init camera gpio failed: %d.\n", ret);
     end_cam_i2c();
 error_i2c:
     dma_free_coherent(dev, PIXELS, frame_buffer_va, frame_buffer_pa);
