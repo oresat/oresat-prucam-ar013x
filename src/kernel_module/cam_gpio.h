@@ -20,6 +20,6 @@ void camera_enable(void);
  * lines.
  * @return 0 on success or negative errno on error.
  */
-void free_cam_gpio(void);
+void free_cam_gpio(struct device *dev);
 
 #endif

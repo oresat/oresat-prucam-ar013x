@@ -84,23 +84,22 @@
                       "arm_to_prus", 
                       "pru0_to_pru1";
 
-    bus_oe-gpios    = <&gpio3 1 GPIO_ACTIVE_HIGH>;
+    bus-oe-gpios    = <&gpio3 1 GPIO_ACTIVE_HIGH>;
     flash-gpios     = <&gpio0 1 GPIO_ACTIVE_HIGH>;
-    cam_oe-gpios    = <&gpio3 0 GPIO_ACTIVE_HIGH>;
-    clk_en-gpios    = <&gpio3 10 GPIO_ACTIVE_HIGH>;
-    input_en-gpios  = <&gpio2 21 GPIO_ACTIVE_HIGH>;
+    cam-oe-gpios    = <&gpio3 0 GPIO_ACTIVE_HIGH>;
+    clk-en-gpios    = <&gpio3 10 GPIO_ACTIVE_HIGH>;
+    input-en-gpios  = <&gpio2 21 GPIO_ACTIVE_HIGH>;
     reset-gpios     = <&gpio2 20 GPIO_ACTIVE_HIGH>;
     saddr-gpios     = <&gpio2 19 GPIO_ACTIVE_HIGH>;
     standby-gpios   = <&gpio2 18 GPIO_ACTIVE_HIGH>;
     trigger-gpios   = <&gpio3 2 GPIO_ACTIVE_HIGH>;
-    vreg_en-gpios   = <&gpio3 4 GPIO_ACTIVE_HIGH>;
+    vreg-en-gpios   = <&gpio3 4 GPIO_ACTIVE_HIGH>;
   };
 };
 
 // overlay to enable camera GPIO pinmux.
 &am33xx_pinmux {
-  camera-pins: camera-pins {
-    #gpio-cells = <2>;
+  camera_pins: camera-pins {
     pinctrl-single,pins = <
       /* Pins for camera control */
       AM33XX_PADCONF(AM335X_PIN_MII1_TXD3, PIN_OUTPUT, MUX_MODE7)   /* mii1_txd3 == flash */

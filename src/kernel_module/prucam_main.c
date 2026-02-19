@@ -22,6 +22,8 @@
 #include "cam_gpio.h"
 #include "cam_i2c.h"
 #include "linux/err.h"
+#include "linux/kern_levels.h"
+#include "linux/printk.h"
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Oliver Rew");
@@ -335,7 +337,7 @@ error_misc:
     sysfs_remove_groups(&dev->kobj, ar013x_groups);
 error_sysfs:
 error_i2c_rw:
-    free_cam_gpio();
+    free_cam_gpio(dev);
 error_gpio:
     dev_err(dev, "Init camera gpio failed: %d.\n", ret);
     end_cam_i2c();
@@ -373,7 +375,7 @@ static void prucam_remove(struct platform_device *pdev)
     sysfs_remove_groups(&dev->kobj, ar013x_groups);
 
     /* Put camera GPIO in good state and free the lines */
-    free_cam_gpio();
+    free_cam_gpio(dev);
 
     end_cam_i2c();
 

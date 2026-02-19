@@ -10,61 +10,63 @@ int init_cam_gpio(struct device *dev)
 {
     int ret;
 
-    bus_oe = gpiod_get(dev, "bus_oe", GPIOD_OUT_HIGH);
+    bus_oe = devm_gpiod_get(dev, "bus-oe", GPIOD_OUT_HIGH);
     if (IS_ERR(bus_oe)) {
         ret = PTR_ERR(bus_oe);
         return ret;
     }
 
-    flash = gpiod_get(dev, "flash", GPIOD_OUT_HIGH);
-    if (IS_ERR(flash)) {
-        ret = PTR_ERR(flash);
-        return ret;
-    }
-
-    cam_oe = gpiod_get(dev, "cam_oe", GPIOD_OUT_HIGH);
+    cam_oe = devm_gpiod_get(dev, "cam-oe", GPIOD_OUT_HIGH);
     if (IS_ERR(cam_oe)) {
         ret = PTR_ERR(cam_oe);
         return ret;
     }
 
-    clk_en = gpiod_get(dev, "clk_en", GPIOD_OUT_HIGH);
+    clk_en = devm_gpiod_get(dev, "clk-en", GPIOD_OUT_LOW);
     if (IS_ERR(clk_en)) {
         ret = PTR_ERR(clk_en);
         return ret;
     }
 
-    input_en = gpiod_get(dev, "input_en", GPIOD_OUT_HIGH);
+    // enable input by default
+    input_en = devm_gpiod_get(dev, "input-en", GPIOD_OUT_LOW);
     if (IS_ERR(input_en)) {
         ret = PTR_ERR(input_en);
         return ret;
     }
 
-    reset = gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
+    flash = devm_gpiod_get(dev, "flash", GPIOD_OUT_HIGH);
+    if (IS_ERR(flash)) {
+        ret = PTR_ERR(flash);
+        return ret;
+    }
+
+    reset = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
     if (IS_ERR(reset)) {
         ret = PTR_ERR(reset);
         return ret;
     }
 
-    saddr = gpiod_get(dev, "saddr", GPIOD_OUT_HIGH);
+    // sensor address select
+    saddr = devm_gpiod_get(dev, "saddr", GPIOD_OUT_LOW);
     if (IS_ERR(saddr)) {
         ret = PTR_ERR(saddr);
         return ret;
     }
 
-    standby = gpiod_get(dev, "standby", GPIOD_OUT_HIGH);
+    standby = devm_gpiod_get(dev, "standby", GPIOD_OUT_LOW);
     if (IS_ERR(standby)) {
         ret = PTR_ERR(standby);
         return ret;
     }
 
-    trigger = gpiod_get(dev, "trigger", GPIOD_OUT_HIGH);
+    trigger = devm_gpiod_get(dev, "trigger", GPIOD_OUT_LOW);
     if (IS_ERR(trigger)) {
         ret = PTR_ERR(trigger);
         return ret;
     }
 
-    vreg_en = gpiod_get(dev, "vreg_en", GPIOD_OUT_HIGH);
+    vreg_en = devm_gpiod_get(dev, "vreg-en", GPIOD_OUT_LOW);
     if (IS_ERR(vreg_en)) {
         ret = PTR_ERR(vreg_en);
         return ret;
@@ -73,18 +75,9 @@ int init_cam_gpio(struct device *dev)
     return 0;
 }
 
-void free_cam_gpio(void)
+void free_cam_gpio(struct device *dev)
 {
-    gpiod_put(bus_oe);
-    gpiod_put(flash);
-    gpiod_put(cam_oe);
-    gpiod_put(clk_en);
-    gpiod_put(input_en);
-    gpiod_put(reset);
-    gpiod_put(saddr);
-    gpiod_put(standby);
-    gpiod_put(trigger);
-    gpiod_put(vreg_en);
+    // device managed gpio are freeed when the device detaches
 }
 
 void camera_enable(void)
