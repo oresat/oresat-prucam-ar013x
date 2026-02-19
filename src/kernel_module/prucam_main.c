@@ -1,6 +1,8 @@
+#include <linux/completion.h>
 #include <linux/device.h>
 #include <linux/dma-mapping.h>
 #include <linux/fs.h>
+#include <linux/gpio/consumer.h>
 #include <linux/init.h>
 #include <linux/interrupt.h>
 #include <linux/irq.h>
@@ -8,11 +10,10 @@
 #include <linux/miscdevice.h>
 #include <linux/module.h>
 #include <linux/platform_device.h>
-#include <linux/pruss.h>
+#include <linux/pruss_driver.h>
 #include <linux/remoteproc.h>
 #include <linux/sysfs.h>
 #include <linux/uaccess.h>
-#include <linux/completion.h>
 
 #include "ar0130_ctrl_regs.h"
 #include "ar0134_ctrl_regs.h"
@@ -20,6 +21,9 @@
 #include "ar013x_sysfs.h"
 #include "cam_gpio.h"
 #include "cam_i2c.h"
+#include "linux/err.h"
+#include "linux/kern_levels.h"
+#include "linux/printk.h"
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Oliver Rew");
@@ -27,11 +31,11 @@ MODULE_AUTHOR("Ryan Medick");
 MODULE_DESCRIPTION("AM335x PRU Camera Interface Driver");
 MODULE_VERSION("1.1.0");
 
-#define ROWS           960
-#define COLS           1280
-#define PIXELS         (ROWS * COLS)
-#define PRU0_FW_NAME   "prucam_pru0_fw.out"
-#define PRU1_FW_NAME   "prucam_pru1_fw.out"
+#define ROWS         960
+#define COLS         1280
+#define PIXELS       (ROWS * COLS)
+#define PRU0_FW_NAME "prucam_pru0_fw.out"
+#define PRU1_FW_NAME "prucam_pru1_fw.out"
 
 // private data
 struct miscdevice miscdev;
@@ -42,7 +46,7 @@ struct mutex mutex;
  * PRU to kernel
  */
 dma_addr_t frame_buffer_pa = (dma_addr_t)NULL;
-int *frame_buffer_va = NULL;
+int *frame_buffer_va       = NULL;
 
 /**
  * completion to signal interrupt was received from PRU, signalling that the
@@ -86,10 +90,7 @@ static void free_irqs(void)
             free_irq(irqs[i].num, NULL);
 }
 
-static int dev_open(struct inode *inodep, struct file *filep)
-{
-    return 0;
-}
+static int dev_open(struct inode *inodep, struct file *filep) { return 0; }
 
 static ssize_t dev_read(struct file *filep, char *buffer, size_t len,
                         loff_t *offset)
@@ -104,7 +105,8 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len,
     irq_set_irqchip_state(irqs[1].num, IRQCHIP_STATE_PENDING, true);
 
     /* Wait for intc to be triggered for 500ms */
-    ret = wait_for_completion_timeout(&pru_to_arm_irq_trigger, msecs_to_jiffies(500));
+    ret = wait_for_completion_timeout(&pru_to_arm_irq_trigger,
+                                      msecs_to_jiffies(500));
     if (ret == 0) {
         printk(KERN_ERR "prucam: interrupt never triggered\n");
         mutex_unlock(&mutex);
@@ -114,7 +116,7 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len,
     printk(KERN_INFO "prucam: image captured\n");
 
     /* copy the image to the caller */
-    ret = copy_to_user(buffer, (char*)frame_buffer_va, PIXELS);
+    ret = copy_to_user(buffer, (char *)frame_buffer_va, PIXELS);
     if (ret) {
         printk(KERN_ERR "prucam: copy to user failed\n");
         mutex_unlock(&mutex);
@@ -134,10 +136,7 @@ static irqreturn_t pru_irq_handler(int irq_num, void *dev_id)
     return IRQ_HANDLED;
 }
 
-static int dev_release(struct inode *inodep, struct file *filep)
-{
-    return 0;
-}
+static int dev_release(struct inode *inodep, struct file *filep) { return 0; }
 
 static const struct file_operations prucam_fops = {
     .owner   = THIS_MODULE,
@@ -149,7 +148,7 @@ static const struct file_operations prucam_fops = {
 static int prucam_probe(struct platform_device *pdev)
 {
     struct device *dev;
-    struct device_node *node = pdev->dev.of_node;
+    struct device_node *node    = pdev->dev.of_node;
     camera_regs_t *startup_regs = NULL;
     int ret, irq;
     u16 cam_ver;
@@ -220,14 +219,12 @@ static int prucam_probe(struct platform_device *pdev)
     /* Set firmware for PRUs */
     ret = rproc_set_firmware(pru0, PRU0_FW_NAME);
     if (ret) {
-        dev_err(dev, "Failed to set PRU0 firmware %s: %d\n",
-            PRU0_FW_NAME, ret);
+        dev_err(dev, "Failed to set PRU0 firmware %s: %d\n", PRU0_FW_NAME, ret);
         goto error_set_pru0_fw;
     }
     ret = rproc_set_firmware(pru1, PRU1_FW_NAME);
     if (ret) {
-        dev_err(dev, "Failed to set PRU1 firmware %s: %d\n",
-            PRU1_FW_NAME, ret);
+        dev_err(dev, "Failed to set PRU1 firmware %s: %d\n", PRU1_FW_NAME, ret);
         goto error_set_pru1_fw;
     }
 
@@ -251,23 +248,25 @@ static int prucam_probe(struct platform_device *pdev)
     }
 
     /* Allocate a physically contiguous frame buffer */
-    frame_buffer_va = dma_alloc_coherent(dev, PIXELS, &frame_buffer_pa, GFP_KERNEL);
+    frame_buffer_va
+        = dma_alloc_coherent(dev, PIXELS, &frame_buffer_pa, GFP_KERNEL);
     if (!frame_buffer_va) {
         dev_err(dev, "Failed to allocate DMA\n");
         ret = -1;
         goto error_dma_alloc;
     }
 
-    dev_info(dev, "prucam: frame buffer virt/phys: 0x%p/0x%p\n", frame_buffer_va, (void*)frame_buffer_pa);
+    dev_info(dev, "prucam: frame buffer virt/phys: 0x%p/0x%p\n",
+             frame_buffer_va, (void *)frame_buffer_pa);
 
     /**
      * Write the frame buffer physical address to the base of PRU shared mem.
      * The PRUs will read the address from here and then write the image to
      * this buffer. In the future, this will like be a struct with additional
      * information to be transferred to the PRUs.
-     * TODO We are technically writing to this memory without the PRUs permission
-     * and it would be preferrable to somehow allocate this memory in the PRUs,
-     * perhaps with the linker script, so it could not be clobbered
+     * TODO We are technically writing to this memory without the PRUs
+     * permission and it would be preferrable to somehow allocate this memory in
+     * the PRUs, perhaps with the linker script, so it could not be clobbered
      * TODO write checksum to other location for PRU to verify
      */
     writel((int)frame_buffer_pa, shared_mem.va);
@@ -279,9 +278,9 @@ static int prucam_probe(struct platform_device *pdev)
     }
 
     /* Init the camera control GPIO */
-    ret = init_cam_gpio();
+    ret = init_cam_gpio(dev);
     if (ret < 0) {
-        dev_err(dev, "Init camera gpio failed: %d.\n", ret);
+        dev_err(dev, "Failed to init gpio: %d.\n", ret);
         goto error_gpio;
     }
 
@@ -321,11 +320,11 @@ static int prucam_probe(struct platform_device *pdev)
     }
 
     /* add misc device for file ops */
-    miscdev.fops = &prucam_fops;
+    miscdev.fops  = &prucam_fops;
     miscdev.minor = MISC_DYNAMIC_MINOR;
-    miscdev.mode = S_IRUGO;
-    miscdev.name = "prucam";
-    ret = misc_register(&miscdev);
+    miscdev.mode  = S_IRUGO;
+    miscdev.name  = "prucam";
+    ret           = misc_register(&miscdev);
     if (ret)
         goto error_misc;
 
@@ -338,8 +337,9 @@ error_misc:
     sysfs_remove_groups(&dev->kobj, ar013x_groups);
 error_sysfs:
 error_i2c_rw:
-    free_cam_gpio();
+    free_cam_gpio(dev);
 error_gpio:
+    dev_err(dev, "Init camera gpio failed: %d.\n", ret);
     end_cam_i2c();
 error_i2c:
     dma_free_coherent(dev, PIXELS, frame_buffer_va, frame_buffer_pa);
@@ -365,7 +365,7 @@ error_get_pru0:
     return ret;
 }
 
-static int prucam_remove(struct platform_device *pdev)
+static void prucam_remove(struct platform_device *pdev)
 {
     struct device *dev = &pdev->dev;
 
@@ -375,7 +375,7 @@ static int prucam_remove(struct platform_device *pdev)
     sysfs_remove_groups(&dev->kobj, ar013x_groups);
 
     /* Put camera GPIO in good state and free the lines */
-    free_cam_gpio();
+    free_cam_gpio(dev);
 
     end_cam_i2c();
 
@@ -389,19 +389,17 @@ static int prucam_remove(struct platform_device *pdev)
     rproc_shutdown(pru0);
     rproc_shutdown(pru1);
 
-
     free_irqs();
 
     pru_rproc_put(pru1);
     pru_rproc_put(pru0);
 
     printk("prucam removed\n");
-    return 0;
 }
 
 static const struct of_device_id prucam_of_ids[] = {
-    { .compatible = "psas,prucam-ar013x"},
-    { /* sentinel */ },
+    {.compatible = "psas,prucam-ar013x"},
+    {/* sentinel */},
 };
 
 MODULE_DEVICE_TABLE(of, prucam_of_ids);

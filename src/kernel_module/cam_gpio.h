@@ -1,30 +1,13 @@
 #ifndef CAM_GPIO_H
 #define CAM_GPIO_H
 
-// Camera Control Pin Numbers
-#define GPIO_FLASH    16
-#define GPIO_BUS_OE   97
-#define GPIO_CAM_OE   96
-#define GPIO_CLK_EN   106
-#define GPIO_INPUT_EN 85
-#define GPIO_RESET    84
-#define GPIO_SADDR    83
-#define GPIO_STANDBY  82
-#define GPIO_TRIGGER  98
-#define GPIO_VREG_EN  100
-
-typedef struct {
-    u8 num;
-    bool init;
-    bool enable;
-    char *label;
-} gpio;
+#include <linux/gpio/consumer.h>
 
 /**
  * @brief Initalize all the camera gpio pins..
  * @return 0 on success or negative errno on error.
  */
-int init_cam_gpio(void);
+int init_cam_gpio(struct device *dev);
 
 /**
  * @brief Enables the gpio pins for camera.
@@ -37,6 +20,6 @@ void camera_enable(void);
  * lines.
  * @return 0 on success or negative errno on error.
  */
-int free_cam_gpio(void);
+void free_cam_gpio(struct device *dev);
 
 #endif
