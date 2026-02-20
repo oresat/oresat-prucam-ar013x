@@ -35,6 +35,33 @@ firmware binaries to be installed to work, so build and insert it last.
   - Make sure the `#enable_uboot_cap_universal=` line is commented out.
 - Reboot system to apply device tree overlay: `$ sudo reboot`
 
+The pins that are multiplexed for this device are
+
+```text
+group: camera-pins
+pin 71 (PIN71)
+pin 67 (PIN67)
+pin 66 (PIN66)
+pin 76 (PIN76)
+pin 80 (PIN80)
+pin 79 (PIN79)
+pin 78 (PIN78)
+pin 77 (PIN77)
+pin 68 (PIN68)
+pin 70 (PIN70)
+pin 100 (PIN100)
+pin 101 (PIN101)
+pin 102 (PIN102)
+pin 103 (PIN103)
+pin 104 (PIN104)
+pin 105 (PIN105)
+pin 106 (PIN106)
+pin 107 (PIN107)
+pin 14 (PIN14)
+pin 15 (PIN15)
+pin 109 (PIN109)
+```
+
 ### PRU firmware
 
 - Install dependencies: `$ sudo apt install ti-pru-cgt-v2.3 ti-pru-software-v6.0`
