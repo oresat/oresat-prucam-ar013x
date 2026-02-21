@@ -1,4 +1,4 @@
-Source: prucam
+Source: prucam-ar013x
 Maintainer: PSAS <oresat@pdx.edu>
 Build-Depends:
   debhelper (>= 10),
@@ -6,10 +6,11 @@ Build-Depends:
   dh-dkms,
   device-tree-compiler,
   ti-pru-cgt-v2.3,
+  ti-pru-software-v6.3,
   fakeroot
-Homepage: https://github.com/oresat/oresat-prucam-ar013x
+Homepage: https://github.com/oresat/oresat-prucam-ar013x-ar013x
 
-Package: prucam
+Package: prucam-ar013x
 Architecture: armhf
 Depends: ${misc:Depends}
-Description: Kernel module, device tree overlay, and PRU firmware for prucam
+Description: Kernel module, device tree overlay, and PRU firmware for prucam-ar013x
