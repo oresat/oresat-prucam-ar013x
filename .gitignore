@@ -200,9 +200,9 @@ gen/
 prucam-ar013x-dkms_*
 debhelper-build-stamp
 files
+*/prucam-ar013x/
 prucam-ar013x-dkms/
 *.deb
-changelog
 
 # device tree overlay
 *.dtbo
