@@ -197,12 +197,11 @@ gen/
 .debhelper/
 *.debhelper*
 *.substvars
-prucam-ar013x-dkms_*
 debhelper-build-stamp
 files
-prucam-ar013x-dkms/
-*.deb
 changelog
+*/prucam/
+*.deb
 
 # device tree overlay
 *.dtbo
@@ -223,3 +222,6 @@ test_camera
 
 # MacOS
 .DS_Store
+
+# clangd
+*/compile_commands.json
