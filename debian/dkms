@@ -1,8 +1,8 @@
-PACKAGE_NAME="prucam"
+PACKAGE_NAME="prucam-ar013x"
 PACKAGE_VERSION="#MODULE_VERSION#"
 AUTOINSTALL="yes"
 
-BUILT_MODULE_NAME[0]="$PACKAGE_NAME"
+BUILT_MODULE_NAME[0]="prucam"
 DEST_MODULE_LOCATION[0]="/updates/dkms"
 
 MAKE[0]="make -C $kernel_source_dir M=$dkms_tree/$PACKAGE_NAME/$PACKAGE_VERSION/build"
