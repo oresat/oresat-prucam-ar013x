@@ -1,15 +1,18 @@
 #include <linux/completion.h>
 #include <linux/device.h>
 #include <linux/dma-mapping.h>
+#include <linux/err.h>
 #include <linux/fs.h>
 #include <linux/gpio/consumer.h>
 #include <linux/init.h>
 #include <linux/interrupt.h>
 #include <linux/irq.h>
+#include <linux/kern_levels.h>
 #include <linux/kernel.h>
 #include <linux/miscdevice.h>
 #include <linux/module.h>
 #include <linux/platform_device.h>
+#include <linux/printk.h>
 #include <linux/pruss_driver.h>
 #include <linux/remoteproc.h>
 #include <linux/sysfs.h>
@@ -19,12 +22,8 @@
 #include "ar0134_ctrl_regs.h"
 #include "ar013x_regs.h"
 #include "ar013x_sysfs.h"
-#include "asm-generic/int-ll64.h"
 #include "cam_gpio.h"
 #include "cam_i2c.h"
-#include "linux/err.h"
-#include "linux/kern_levels.h"
-#include "linux/printk.h"
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Oliver Rew");
