@@ -19,6 +19,7 @@
 #include "ar0134_ctrl_regs.h"
 #include "ar013x_regs.h"
 #include "ar013x_sysfs.h"
+#include "asm-generic/int-ll64.h"
 #include "cam_gpio.h"
 #include "cam_i2c.h"
 #include "linux/err.h"
@@ -150,8 +151,8 @@ static int prucam_probe(struct platform_device *pdev)
     struct device *dev;
     struct device_node *node    = pdev->dev.of_node;
     camera_regs_t *startup_regs = NULL;
-    int ret, irq;
-    u16 cam_ver;
+    int ret                     = 0;
+    int irq;
 
     if (!node)
         return -ENODEV; /* No support for non-DT platforms */
@@ -228,18 +229,6 @@ static int prucam_probe(struct platform_device *pdev)
         goto error_set_pru1_fw;
     }
 
-    /* Boot PRUs (boot PRU1 1st) */
-    ret = rproc_boot(pru1);
-    if (ret) {
-        dev_err(dev, "Failed to boot PRU1: %d\n", ret);
-        goto error_boot_pru1;
-    }
-    ret = rproc_boot(pru0);
-    if (ret) {
-        dev_err(dev, "Failed to boot PRU0: %d\n", ret);
-        goto error_boot_pru0;
-    }
-
     /* Set DMA mask */
     ret = dma_set_coherent_mask(dev, 0xffffffff);
     if (ret) {
@@ -271,6 +260,18 @@ static int prucam_probe(struct platform_device *pdev)
      */
     writel((int)frame_buffer_pa, shared_mem.va);
 
+    /* Boot PRUs (boot PRU1 1st) */
+    ret = rproc_boot(pru1);
+    if (ret) {
+        dev_err(dev, "Failed to boot PRU1: %d\n", ret);
+        goto error_boot_pru1;
+    }
+    ret = rproc_boot(pru0);
+    if (ret) {
+        dev_err(dev, "Failed to boot PRU0: %d\n", ret);
+        goto error_boot_pru0;
+    }
+
     ret = init_cam_i2c();
     if (ret < 0) {
         dev_err(dev, "Init camera i2c failed: %d.\n", ret);
@@ -288,6 +289,8 @@ static int prucam_probe(struct platform_device *pdev)
     camera_enable();
 
     /* Detect image sensor model */
+    u16 cam_ver = 0x0000;
+
     ret = read_cam_reg(AR013X_AD_CHIP_VERSION_REG, &cam_ver);
     if (ret < 0) {
         dev_err(dev, "Read camera version over i2c failed\n");
@@ -342,13 +345,13 @@ error_gpio:
     dev_err(dev, "Init camera gpio failed: %d.\n", ret);
     end_cam_i2c();
 error_i2c:
-    dma_free_coherent(dev, PIXELS, frame_buffer_va, frame_buffer_pa);
-error_dma_alloc:
-error_dma_set:
     rproc_shutdown(pru0);
 error_boot_pru0:
     rproc_shutdown(pru1);
 error_boot_pru1:
+    dma_free_coherent(dev, PIXELS, frame_buffer_va, frame_buffer_pa);
+error_dma_alloc:
+error_dma_set:
 error_set_pru1_fw:
 error_set_pru0_fw:
 error_irq:
