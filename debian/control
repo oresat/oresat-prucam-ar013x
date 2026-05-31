@@ -6,7 +6,7 @@ Build-Depends:
   dh-dkms,
   device-tree-compiler,
   ti-pru-cgt-v2.3,
-  ti-pru-software-v6.3,
+  ti-pru-software-v6.0,
   fakeroot
 Homepage: https://github.com/oresat/oresat-prucam-ar013x-ar013x
 
