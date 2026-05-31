@@ -1,4 +1,4 @@
-NAME= prudev-00A0
+NAME=prucam-00A0
 DTC_FLAGS= -Wno-unit_address_vs_reg -Wno-chosen_node_is_root -Wno-alias_paths
 
 all:
