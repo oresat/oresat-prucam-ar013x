@@ -132,6 +132,7 @@
       AM33XX_PADCONF(AM335X_PIN_GPMC_AD15, PIN_INPUT, MUX_MODE6)         /* gpmc_ad15 == pru0_r31_15 == camera HSYNC */
       AM33XX_PADCONF(AM335X_PIN_XDMA_EVENT_INTR1, PIN_INPUT, MUX_MODE5)  /* xdma_event_intr1 == pru0_r31_16 == camera pixel clock */
     >;
+  };
 
     dcan1_pins: pinmux-dcan1-pins {
     pinctrl-single,pins = <
