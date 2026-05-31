@@ -24,27 +24,8 @@
   P2_34_pinmux { status = "disabled"; };
 };
 
-/**
-* TODO: 
-* These are disabled to prevent pinmux collisions,
-* but wouldn't be necessary if we had custom device trees
-*/
-&mcasp0 {
-  status = "disabled";
-};
-
-&mac_sw {
-  status = "disabled";
-};
-
-&dcan1 {
-  status = "okay";
-  pinctrl-names = "default";
-  pinctrl-0 = <&dcan1_pins>;
-};
-
 &{/} {
-  prudev: prudev {
+  prucam: prucam {
     compatible = "psas,prucam-ar013x";
     pinctrl-names = "default";
     pinctrl-0 = <&camera_pins>;
@@ -131,13 +112,6 @@
       AM33XX_PADCONF(AM335X_PIN_GPMC_AD14, PIN_INPUT, MUX_MODE6)         /* gpmc_ad14 == pru0_r31_14 == camera VSYNC */
       AM33XX_PADCONF(AM335X_PIN_GPMC_AD15, PIN_INPUT, MUX_MODE6)         /* gpmc_ad15 == pru0_r31_15 == camera HSYNC */
       AM33XX_PADCONF(AM335X_PIN_XDMA_EVENT_INTR1, PIN_INPUT, MUX_MODE5)  /* xdma_event_intr1 == pru0_r31_16 == camera pixel clock */
-    >;
-  };
-
-    dcan1_pins: pinmux-dcan1-pins {
-    pinctrl-single,pins = <
-      AM33XX_PADCONF(AM335X_PIN_UART1_TXD, PIN_INPUT_PULLUP, MUX_MODE2) /* dcan1_rx */
-      AM33XX_PADCONF(AM335X_PIN_UART1_RXD, PIN_OUTPUT_PULLDOWN, MUX_MODE2) /* dcan1_tx */
     >;
   };
 };
