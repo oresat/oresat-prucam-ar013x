@@ -1,5 +1,3 @@
-/* Copied from https://github.com/beagleboard/bb.org-overlays */
-
 /* SPDX-License-Identifier: GPL-2.0 */
 /*
  * This header provides constants for OMAP pinctrl bindings.
@@ -56,7 +54,7 @@
  * Macros to allow using the absolute physical address instead of the
  * padconf registers instead of the offset from padconf base.
  */
-#define OMAP_IOPAD_OFFSET(pa, offset) (((pa)&0xffff) - (offset))
+#define OMAP_IOPAD_OFFSET(pa, offset) (((pa) & 0xffff) - (offset))
 
 #define OMAP2420_CORE_IOPAD(pa, val)  OMAP_IOPAD_OFFSET((pa), 0x0030)(val)
 #define OMAP2430_CORE_IOPAD(pa, val)  OMAP_IOPAD_OFFSET((pa), 0x2030)(val)
@@ -66,10 +64,8 @@
 #define OMAP3_WKUP_IOPAD(pa, val)     OMAP_IOPAD_OFFSET((pa), 0x2a00)(val)
 #define DM814X_IOPAD(pa, val)         OMAP_IOPAD_OFFSET((pa), 0x0800)(val)
 #define DM816X_IOPAD(pa, val)         OMAP_IOPAD_OFFSET((pa), 0x0800)(val)
-#define AM33XX_IOPAD(pa, val)         OMAP_IOPAD_OFFSET((pa), 0x0800)(val)
-#define AM33XX_PADCONF(pa, dir, mux)  OMAP_IOPAD_OFFSET((pa), 0x0800)((dir) | (mux))
-#define AM4372_IOPAD(pa, val)         OMAP_IOPAD_OFFSET((pa), 0x0800)(val)
-#define DRA7XX_CORE_IOPAD(pa, val)    OMAP_IOPAD_OFFSET((pa), 0x3400)(val)
+#define AM33XX_IOPAD(pa, val)         OMAP_IOPAD_OFFSET((pa), 0x0800)(val)(0)
+#define AM33XX_PADCONF(pa, conf, mux) OMAP_IOPAD_OFFSET((pa), 0x0800)(conf)(mux)
 
 /*
  * Macros to allow using the offset from the padconf physical address
